@@ -95,11 +95,16 @@ export async function getDevices(): Promise<TvDevice[]> {
         
         if (status.components.main?.mediaInputSource?.supportedInputSources?.value) {
           supportedInputSources = status.components.main.mediaInputSource.supportedInputSources.value;
-        } else if (status.components.main?.samsungvd?.mediaInputSource?.supportedInputSourcesMap?.value) {
-          // Access the value property first, then map if it's an array
-          const sourceMap = status.components.main.samsungvd.mediaInputSource.supportedInputSourcesMap.value;
-          if (Array.isArray(sourceMap)) {
-            supportedInputSources = sourceMap.map((src: any) => src.name);
+        } else if (status.components.main?.samsungvd) {
+          // First check if samsungvd exists
+          const samsungvd = status.components.main.samsungvd;
+          // Then check if mediaInputSource exists within samsungvd
+          if (samsungvd.mediaInputSource) {
+            // Finally check if supportedInputSourcesMap exists and has a value property
+            const sourceMap = samsungvd.mediaInputSource.supportedInputSourcesMap?.value;
+            if (Array.isArray(sourceMap)) {
+              supportedInputSources = sourceMap.map((src: any) => src.name);
+            }
           }
         }
         
