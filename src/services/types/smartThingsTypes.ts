@@ -43,6 +43,7 @@ export interface TvDevice {
     switch: string;
     inputSource?: string;
     supportedInputSources?: string[];
+    pictureMode?: string;
   };
 }
 
@@ -57,4 +58,6 @@ export type DeviceCommand =
   | "volumeUp" 
   | "volumeDown" 
   | "setVolume" 
+  | "gameMode"
   | string; // For input source changes that start with "input:"
+

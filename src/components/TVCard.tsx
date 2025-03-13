@@ -1,15 +1,23 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TvDevice } from '@/services/smartThingsService';
 import { TimerState } from '@/hooks/useTimerControl';
 import { Input } from '@/components/ui/input';
-import { Tv, Power, Clock, PlayCircle, PauseCircle, StopCircle, Plus, Settings, Volume2 } from 'lucide-react';
-import { controlDevice } from '@/services/smartThingsService';
+import { Tv, Power, Clock, PlayCircle, PauseCircle, StopCircle, Plus, Settings, Volume2, Gamepad2 } from 'lucide-react';
+import { controlDevice, setupTVForCustomer } from '@/services/smartThingsService';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface TVCardProps {
   tv: TvDevice;
@@ -35,6 +43,9 @@ export function TVCard({
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [extendDuration, setExtendDuration] = useState<number>(15);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [quickSetupDuration, setQuickSetupDuration] = useState<number>(60);
+  const [selectedInput, setSelectedInput] = useState<string>(tv.status.inputSource || "");
+  const [useGameMode, setUseGameMode] = useState<boolean>(false);
 
   const handlePowerToggle = async () => {
     setIsLoading(true);
@@ -45,18 +56,32 @@ export function TVCard({
     }
   };
 
+  const handleQuickSetup = async () => {
+    setIsLoading(true);
+    try {
+      const success = await setupTVForCustomer(tv.id, selectedInput, useGameMode);
+      
+      if (success && quickSetupDuration > 0) {
+        onStartTimer(quickSetupDuration);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isOn = tv.status.switch === 'on';
   const hasTimer = !!timer;
   const isTimerActive = hasTimer && timer.isActive;
   const timerProgress = hasTimer ? (timer.remainingSeconds / (timer.remainingSeconds + 0.01)) * 100 : 0;
   
-  // Determine the status indicator color
   const getStatusColor = () => {
     if (!isOn) return 'bg-gray-300 dark:bg-gray-700';
     if (!hasTimer) return 'bg-yellow-400';
     if (isTimerActive) return 'bg-green-500';
     return 'bg-red-500';
   };
+
+  const inputSources = tv.status.supportedInputSources || [];
 
   return (
     <Card className={cn(
@@ -189,6 +214,76 @@ export function TVCard({
                 </div>
               </PopoverContent>
             </Popover>
+          </div>
+        )}
+
+        {!isOn && (
+          <div className="mt-4 p-3 bg-muted/50 rounded-md">
+            <h4 className="font-medium mb-2 flex items-center gap-1.5">
+              <Tv className="h-4 w-4" /> Quick Setup
+            </h4>
+            <div className="space-y-3 text-left">
+              <div className="space-y-1.5">
+                <Label htmlFor={`input-${tv.id}`}>Select Input</Label>
+                <Select 
+                  value={selectedInput} 
+                  onValueChange={setSelectedInput}
+                >
+                  <SelectTrigger id={`input-${tv.id}`} className="w-full">
+                    <SelectValue placeholder="Select Input" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {inputSources.length > 0 ? (
+                      inputSources.map(source => (
+                        <SelectItem key={source} value={source}>
+                          {source}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="HDMI1">HDMI 1</SelectItem>
+                    )}
+                    {!inputSources.includes("HDMI1") && <SelectItem value="HDMI1">HDMI 1</SelectItem>}
+                    {!inputSources.includes("HDMI2") && <SelectItem value="HDMI2">HDMI 2</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Gamepad2 className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor={`game-mode-${tv.id}`} className="text-sm">Game Mode</Label>
+                </div>
+                <Switch 
+                  id={`game-mode-${tv.id}`}
+                  checked={useGameMode}
+                  onCheckedChange={setUseGameMode}
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`duration-${tv.id}`} className="text-sm whitespace-nowrap">Timer</Label>
+                <Input
+                  id={`duration-${tv.id}`}
+                  type="number"
+                  min={0}
+                  max={240}
+                  value={quickSetupDuration}
+                  onChange={e => setQuickSetupDuration(Number(e.target.value))}
+                  className="w-16 h-8 text-sm"
+                />
+                <span className="text-xs text-muted-foreground">minutes</span>
+              </div>
+              
+              <Button 
+                variant="default" 
+                className="w-full mt-2" 
+                size="sm"
+                onClick={handleQuickSetup}
+                disabled={isLoading}
+              >
+                Power On & Setup
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

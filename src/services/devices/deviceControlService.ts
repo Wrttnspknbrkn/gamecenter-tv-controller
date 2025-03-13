@@ -40,6 +40,11 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
       commandName = "setVolume";
       args = [10]; // Default volume level
       break;
+    case "gameMode":
+      capability = "custom.pictureMode";
+      commandName = "setPictureMode";
+      args = ["GAME"];
+      break;
     default:
       // If it's an input source change
       if (command.startsWith("input:")) {
@@ -71,5 +76,40 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
     console.error("Error controlling device:", error);
     toast.error(`Failed to send command: ${commandName}`);
     throw error;
+  }
+}
+
+/**
+ * Powers on a TV, sets input source and creates a timer in one operation
+ */
+export async function setupTVForCustomer(
+  deviceId: string, 
+  inputSource: string, 
+  useGameMode: boolean = false, 
+  timerMinutes: number = 60
+): Promise<boolean> {
+  try {
+    // Step 1: Power on the TV
+    await controlDevice(deviceId, "on");
+    
+    // Small delay to ensure TV is ready for next commands
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Step 2: Set input source if provided
+    if (inputSource) {
+      await controlDevice(deviceId, `input:${inputSource}`);
+    }
+    
+    // Step 3: Set game mode if requested
+    if (useGameMode) {
+      await controlDevice(deviceId, "gameMode");
+    }
+    
+    toast.success(`TV setup complete for new customer`);
+    return true;
+  } catch (error) {
+    console.error("Failed to setup TV:", error);
+    toast.error("Setup failed. Please try again.");
+    return false;
   }
 }
