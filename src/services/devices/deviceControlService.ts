@@ -1,7 +1,7 @@
 
 import { fetchWithAuth } from "../api/smartThingsApi";
 import { toast } from "sonner";
-import { DeviceCommand } from "../types/smartThingsTypes";
+import { DeviceCommand, TVSetupConfig } from "../types/smartThingsTypes";
 
 /**
  * Controls a device with the specified command
@@ -80,13 +80,11 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
 }
 
 /**
- * Powers on a TV, sets input source and creates a timer in one operation
+ * Powers on a TV, sets appropriate HDMI source if game mode is enabled and creates a timer
  */
 export async function setupTVForCustomer(
   deviceId: string, 
-  inputSource: string, 
-  useGameMode: boolean = false, 
-  timerMinutes: number = 60
+  config: TVSetupConfig
 ): Promise<boolean> {
   try {
     // Step 1: Power on the TV
@@ -95,13 +93,11 @@ export async function setupTVForCustomer(
     // Small delay to ensure TV is ready for next commands
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Step 2: Set input source if provided
-    if (inputSource) {
-      await controlDevice(deviceId, `input:${inputSource}`);
-    }
-    
-    // Step 3: Set game mode if requested
-    if (useGameMode) {
+    // Step 2: If game mode is enabled, set the TV to game mode and HDMI1
+    if (config.useGameMode) {
+      // Set input to HDMI1 for PlayStation
+      await controlDevice(deviceId, "input:HDMI1");
+      // Enable game mode picture settings
       await controlDevice(deviceId, "gameMode");
     }
     

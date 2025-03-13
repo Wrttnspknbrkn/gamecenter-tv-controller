@@ -48,6 +48,14 @@ export interface TvDevice {
 }
 
 /**
+ * Setup configuration for TVs
+ */
+export interface TVSetupConfig {
+  useGameMode: boolean;
+  timerDuration: number;
+}
+
+/**
  * Command types for device control
  */
 export type DeviceCommand = 
@@ -60,4 +68,3 @@ export type DeviceCommand =
   | "setVolume" 
   | "gameMode"
   | string; // For input source changes that start with "input:"
-
