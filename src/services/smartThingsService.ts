@@ -89,8 +89,19 @@ export async function getDevices(): Promise<TvDevice[]> {
         // Extract the relevant status information
         const switchStatus = status.components.main?.switch?.switch?.value || "unknown";
         const inputSource = status.components.main?.mediaInputSource?.inputSource?.value;
-        const supportedInputSources = status.components.main?.mediaInputSource?.supportedInputSources?.value ||
-                                     status.components.main?.samsungvd?.mediaInputSource?.supportedInputSourcesMap?.value?.map((src: any) => src.name);
+        
+        // Fix: Safely access supportedInputSources from multiple possible paths
+        let supportedInputSources;
+        
+        if (status.components.main?.mediaInputSource?.supportedInputSources?.value) {
+          supportedInputSources = status.components.main.mediaInputSource.supportedInputSources.value;
+        } else if (status.components.main?.samsungvd?.mediaInputSource?.supportedInputSourcesMap?.value) {
+          // Access the value property first, then map if it's an array
+          const sourceMap = status.components.main.samsungvd.mediaInputSource.supportedInputSourcesMap.value;
+          if (Array.isArray(sourceMap)) {
+            supportedInputSources = sourceMap.map((src: any) => src.name);
+          }
+        }
         
         return {
           id: device.deviceId,
