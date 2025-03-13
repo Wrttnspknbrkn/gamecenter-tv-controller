@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +7,7 @@ import { TVCard } from '@/components/TVCard';
 import { useTimerControl } from '@/hooks/useTimerControl';
 import { toast } from 'sonner';
 import { RefreshCcw, MonitorSmartphone } from 'lucide-react';
+import { TokenSettings } from '@/components/TokenSettings';
 
 export default function Index() {
   const [tvDevices, setTvDevices] = useState<TvDevice[]>([]);
@@ -42,7 +42,6 @@ export default function Index() {
   useEffect(() => {
     fetchDevices();
     
-    // Refresh devices every 30 seconds
     const intervalId = setInterval(() => {
       fetchDevices();
     }, 30000);
@@ -78,30 +77,33 @@ export default function Index() {
 
   return (
     <div className="min-h-screen animate-fade-in">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <header className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <header className="mb-6 sm:mb-8">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight mb-1">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">
                 <span className="flex items-center gap-2">
-                  <MonitorSmartphone className="h-8 w-8 text-primary" />
+                  <MonitorSmartphone className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                   TV Timer Management
                 </span>
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Control and manage timers for your Samsung TVs
               </p>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <TokenSettings />
               <Button 
                 variant="outline"
                 onClick={fetchDevices}
                 disabled={refreshing}
                 className="flex items-center gap-2"
+                size="sm"
+                aria-label="Refresh devices"
               >
                 <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
             </div>
           </div>
@@ -113,19 +115,21 @@ export default function Index() {
           onValueChange={setActiveTab}
           className="mb-6"
         >
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">All TVs</TabsTrigger>
-            <TabsTrigger value="active">Active Timers</TabsTrigger>
-            <TabsTrigger value="inactive">Inactive</TabsTrigger>
-            <TabsTrigger value="online">Online</TabsTrigger>
-            <TabsTrigger value="offline">Offline</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="mb-4 flex-nowrap">
+              <TabsTrigger value="all">All TVs</TabsTrigger>
+              <TabsTrigger value="active">Active Timers</TabsTrigger>
+              <TabsTrigger value="inactive">Inactive</TabsTrigger>
+              <TabsTrigger value="online">Online</TabsTrigger>
+              <TabsTrigger value="offline">Offline</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value={activeTab} className="mt-0">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="border rounded-lg p-6 space-y-4">
+                  <div key={i} className="border rounded-lg p-4 sm:p-6 space-y-4">
                     <Skeleton className="h-6 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
                     <div className="space-y-2 py-4">
@@ -140,12 +144,12 @@ export default function Index() {
                 ))}
               </div>
             ) : filteredDevices.length === 0 ? (
-              <div className="text-center py-12 border rounded-lg bg-muted/20">
-                <p className="text-lg text-muted-foreground mb-4">No TVs found in this category</p>
+              <div className="text-center py-8 sm:py-12 border rounded-lg bg-muted/20">
+                <p className="text-base sm:text-lg text-muted-foreground mb-4">No TVs found in this category</p>
                 <Button onClick={() => setActiveTab("all")}>View All TVs</Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredDevices.map((tv) => (
                   <TVCard
                     key={tv.id}

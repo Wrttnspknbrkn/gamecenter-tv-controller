@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -96,6 +95,11 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+  
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 }
 
 @layer components {
@@ -110,9 +114,20 @@
   .text-balance {
     text-wrap: balance;
   }
+  
+  .responsive-container {
+    @apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
+  }
+  
+  .responsive-heading {
+    @apply text-xl sm:text-2xl md:text-3xl font-bold;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base;
+  }
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -131,9 +146,24 @@
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
-/* Smooth transitions */
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+@media (max-width: 640px) {
+  .responsive-padding {
+    padding: 1rem !important;
+  }
+  
+  .responsive-spacing {
+    gap: 0.5rem !important;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
 }
