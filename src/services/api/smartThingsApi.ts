@@ -3,9 +3,12 @@ import { toast } from "sonner";
 
 const API_BASE_URL = "https://api.smartthings.com/v1";
 
-// Get token from localStorage or use default (for development only)
+// Default token for development (will be replaced when a user sets a new token)
+const DEFAULT_TOKEN = "604273c0-eff1-4a09-a1c1-ff1f4223aceb";
+
+// Get token from localStorage or use default
 const getAccessToken = () => {
-  return localStorage.getItem('smartthings_token') || "1d48f094-9e03-4ac4-898e-bc9a628240d0";
+  return localStorage.getItem('smartthings_token') || DEFAULT_TOKEN;
 };
 
 /**
@@ -49,3 +52,4 @@ export function setAccessToken(token: string): void {
     toast.error("Invalid API token");
   }
 }
+
