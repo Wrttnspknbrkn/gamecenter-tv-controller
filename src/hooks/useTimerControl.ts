@@ -111,14 +111,14 @@ export function useTimerControl() {
         
         // Handle timer end
         if (timerEnded) {
-          // Turn off the TV
-          controlDevice(endedDeviceId, 'off')
+          // Switch to home screen instead of turning off TV
+          controlDevice(endedDeviceId, 'input:TV')
             .then(() => {
-              toast.success(`Timer ended: ${endedDeviceLabel} was turned off`);
+              toast.success(`Timer ended: ${endedDeviceLabel} switched to home screen`);
             })
             .catch(error => {
-              console.error('Failed to turn off TV:', error);
-              toast.error(`Failed to turn off ${endedDeviceLabel}`);
+              console.error('Failed to switch TV to home screen:', error);
+              toast.error(`Failed to switch ${endedDeviceLabel} to home screen`);
             });
         }
         
@@ -231,7 +231,17 @@ export function useTimerControl() {
       };
     });
     
-    toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes`);
+    // Switch back to game mode when timer is extended
+    controlDevice(deviceId, 'input:HDMI1')
+      .then(() => {
+        controlDevice(deviceId, 'gameMode');
+        toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game mode`);
+      })
+      .catch(error => {
+        console.error('Failed to switch TV to game mode:', error);
+        toast.error(`Failed to switch ${timers[deviceId]?.label} to game mode`);
+      });
+      
   }, [timers]);
 
   // Format remaining time as MM:SS

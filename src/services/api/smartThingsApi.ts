@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 const API_BASE_URL = "https://api.smartthings.com/v1";
 
-// Default token for development (will be replaced when a user sets a new token)
+// Default token for development
 const DEFAULT_TOKEN = "604273c0-eff1-4a09-a1c1-ff1f4223aceb";
 
 // Get token from localStorage or use default
@@ -52,4 +52,3 @@ export function setAccessToken(token: string): void {
     toast.error("Invalid API token");
   }
 }
-
