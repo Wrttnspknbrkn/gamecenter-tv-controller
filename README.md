@@ -1,69 +1,79 @@
-# Welcome to your Lovable project
 
-## Project info
+# GameCenter TV Controller
 
-**URL**: https://lovable.dev/projects/3cf6c0ed-90b6-4fca-b0ca-62bf5889dbfb
+Welcome to **GameCenter TV Controller**, a smart application designed to help gaming centers efficiently manage TV usage time for customers. This application connects to your SmartThings-compatible TVs to control power, set timers, and enable game mode with just a few clicks.
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+- **TV Status Monitoring**: See at a glance which TVs are online/offline and have active timers.
+- **Timer Management**: Create and manage play session timers for each TV.
+- **Quick Setup**: Power on TV, enable game mode, and set timer in a single operation.
+- **Status Filtering**: Filter TVs by status (All, Active Timers, Inactive, Online, Offline).
+- **SmartThings Integration**: Seamlessly integrates with the SmartThings API.
+- **Responsive Design**: Optimized for mobile, tablet, and desktop for seamless use across all devices.
 
-**Use Lovable**
+## 🛠 Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3cf6c0ed-90b6-4fca-b0ca-62bf5889dbfb) and start prompting.
+### **Frontend**
+- **React**: A powerful library for building interactive user interfaces.
+- **TypeScript**: Ensures better code quality and maintainability.
+- **Vite**: A fast and lightweight build tool for modern web apps.
+- **shadcn-ui**: Provides reusable and stylish UI components.
+- **Tailwind CSS**: Enables rapid development of responsive and aesthetic designs.
+- **React Query**: For efficient API state management.
 
-Changes made via Lovable will be committed automatically to this repo.
+### **Deployment**
+- **Live Link**: [GameCenter TV Controller](https://lovable.dev/projects/3cf6c0ed-90b6-4fca-b0ca-62bf5889dbfb)
 
-**Use your preferred IDE**
+## 🔑 How It Works
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Connect SmartThings**:
+   - Enter your SmartThings API token to connect to your TVs.
+2. **Monitor TVs**:
+   - View all connected TVs and their current status.
+3. **Manage Sessions**:
+   - Set timers for play sessions and control TV power status.
+4. **Quick Setup**:
+   - Quickly prepare a TV for a new customer with game mode and timed sessions.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🌱 Installation
 
-Follow these steps:
+### Clone the Repository
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Install Dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Ensure Node.js is installed. Download it [here](https://nodejs.org/).
+
+Install required dependencies with:
+
+```bash
+npm install
+```
+
+### Run the Application Locally
+
+Start the development server with:
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be accessible at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 💡 Ideas for Future Features
 
-**Use GitHub Codespaces**
+- **Customer Management**: Track which customer is using which TV.
+- **Analytics Dashboard**: View usage patterns and popular gaming times.
+- **Automatic Billing**: Integrate with payment systems for automated billing.
+- **Remote Control**: Allow staff to manage TVs from mobile devices.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📬 Contact
 
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/3cf6c0ed-90b6-4fca-b0ca-62bf5889dbfb) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- **Creator**: Kelvin Fameyeh
+- **GitHub**: [@Wrttnspknbrkn](https://github.com/Wrttnspknbrkn)
+- **Email**: wycekhid10@gmail.com
