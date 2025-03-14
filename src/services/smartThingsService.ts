@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { TvDevice, Device } from "./types/smartThingsTypes";
 import { fetchWithAuth } from "./api/smartThingsApi";
 import { processDeviceWithStatus } from "./devices/deviceStatusService";
-import { controlDevice as sendDeviceCommand, setupTVForCustomer as setupTV } from "./devices/deviceControlService";
+import { controlDevice, setupTVForCustomer } from "./devices/deviceControlService";
 
 /**
  * Gets all TV devices with their status information
@@ -30,8 +30,7 @@ export async function getDevices(): Promise<TvDevice[]> {
   }
 }
 
-// Re-export types and functions for backward compatibility
+// Export all the necessary functions and types
 export type { TvDevice } from "./types/smartThingsTypes";
-export { controlDevice } from "./devices/deviceControlService";
-export { setupTVForCustomer } from "./devices/deviceControlService";
+export { controlDevice, setupTVForCustomer };
 export { getDeviceStatus } from "./devices/deviceStatusService";

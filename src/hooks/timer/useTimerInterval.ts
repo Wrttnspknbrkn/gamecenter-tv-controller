@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { TimersState } from './timerTypes';
-import { controlDevice } from '@/services/smartThingsService';
+import { controlDevice } from '@/services/devices/deviceControlService';
 import { toast } from 'sonner';
 
 /**
@@ -52,8 +52,8 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
         
         // Handle timer end
         if (timerEnded) {
-          // Switch to home screen instead of turning off TV
-          controlDevice(endedDeviceId, 'input:TV')
+          // Switch to digitalTv input instead of TV which was causing the error
+          controlDevice(endedDeviceId, 'input:digitalTv')
             .then(() => {
               toast.success(`Timer ended: ${endedDeviceLabel} switched to home screen`);
             })

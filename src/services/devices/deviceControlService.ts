@@ -40,11 +40,7 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
       commandName = "setVolume";
       args = [10]; // Default volume level
       break;
-    case "gameMode":
-      capability = "custom.pictureMode";
-      commandName = "setPictureMode";
-      args = ["GAME"];
-      break;
+    // Removing the gameMode case as it's causing API errors
     default:
       // If it's an input source change
       if (command.startsWith("input:")) {
@@ -93,12 +89,10 @@ export async function setupTVForCustomer(
     // Small delay to ensure TV is ready for next commands
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Step 2: If game mode is enabled, set the TV to game mode and HDMI1
+    // Step 2: If game mode is enabled, set the TV to HDMI1
     if (config.useGameMode) {
       // Set input to HDMI1 for PlayStation
       await controlDevice(deviceId, "input:HDMI1");
-      // Enable game mode picture settings
-      await controlDevice(deviceId, "gameMode");
     }
     
     toast.success(`TV setup complete for new customer`);

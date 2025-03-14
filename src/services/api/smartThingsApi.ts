@@ -47,6 +47,8 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
 export function setAccessToken(token: string): void {
   if (token && token.trim() !== "") {
     localStorage.setItem('smartthings_token', token);
+    // Update the default token as well
+    localStorage.setItem('smartthings_default_token', token);
     toast.success("API token updated successfully");
   } else {
     toast.error("Invalid API token");
