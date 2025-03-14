@@ -41,7 +41,7 @@ Welcome to **GameCenter TV Controller**, a smart application designed to help ga
 ### Clone the Repository
 
 ```bash
-git clone <YOUR_GIT_URL>
+git clone https://github.com/Wrttnspknbrkn/gamecenter-tv-controller.git
 cd <YOUR_PROJECT_NAME>
 ```
 
