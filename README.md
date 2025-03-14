@@ -23,7 +23,7 @@ Welcome to **GameCenter TV Controller**, a smart application designed to help ga
 - **React Query**: For efficient API state management.
 
 ### **Deployment**
-- **Live Link**: [GameCenter TV Controller](https://lovable.dev/projects/3cf6c0ed-90b6-4fca-b0ca-62bf5889dbfb)
+- **Live Link**: [GameCenter TV Controller](https://gamecenter-tv-controller.lovable.app/)
 
 ## 🔑 How It Works
 
