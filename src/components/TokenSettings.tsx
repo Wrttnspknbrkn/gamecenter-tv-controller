@@ -29,7 +29,7 @@ export function TokenSettings() {
           <DialogTitle>SmartThings API Token</DialogTitle>
           <DialogDescription>
             Enter your personal SmartThings API token for secure access.
-            Default development token will be used if none is provided.
+            This token will replace the default token for all future sessions.
           </DialogDescription>
         </DialogHeader>
 
@@ -44,7 +44,7 @@ export function TokenSettings() {
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Your token is stored locally in your browser and never sent to our servers.
+                Your token is stored locally in your browser and will become the new default token.
               </p>
             </div>
           </div>

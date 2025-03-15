@@ -1,14 +1,20 @@
-
 import { toast } from "sonner";
 
 const API_BASE_URL = "https://api.smartthings.com/v1";
 
 // Default token for development
-const DEFAULT_TOKEN = "604273c0-eff1-4a09-a1c1-ff1f4223aceb";
+let DEFAULT_TOKEN = "604273c0-eff1-4a09-a1c1-ff1f4223aceb";
 
 // Get token from localStorage or use default
 const getAccessToken = () => {
-  return localStorage.getItem('smartthings_token') || DEFAULT_TOKEN;
+  // First check for user-provided token
+  const userToken = localStorage.getItem('smartthings_token');
+  if (userToken) {
+    return userToken;
+  }
+  
+  // Otherwise use the default token
+  return DEFAULT_TOKEN;
 };
 
 /**
@@ -47,8 +53,8 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
 export function setAccessToken(token: string): void {
   if (token && token.trim() !== "") {
     localStorage.setItem('smartthings_token', token);
-    // Update the default token as well
-    localStorage.setItem('smartthings_default_token', token);
+    // Update the default token so it's used for new sessions too
+    DEFAULT_TOKEN = token;
     toast.success("API token updated successfully");
   } else {
     toast.error("Invalid API token");

@@ -2,7 +2,7 @@
 import { TimersState, TimerState } from './timerTypes';
 import { calculateEndTime } from './timerUtils';
 import { toast } from 'sonner';
-import { controlDevice } from '@/services/smartThingsService';
+import { controlDevice, getDeviceStatus } from '@/services/smartThingsService';
 
 /**
  * Functions for manipulating timers
@@ -89,12 +89,13 @@ export const stopTimer = (
   toast.info(`Timer stopped for ${timers[deviceId]?.label}`);
 };
 
-export const extendTimer = (
+export const extendTimer = async (
   deviceId: string,
   additionalMinutes: number,
   timers: TimersState,
   setTimers: React.Dispatch<React.SetStateAction<TimersState>>
 ) => {
+  // First update the timer state
   setTimers(prevTimers => {
     if (!prevTimers[deviceId]) return prevTimers;
     
@@ -117,14 +118,20 @@ export const extendTimer = (
     };
   });
   
-  // Switch back to game mode when timer is extended
-  // First set input to HDMI1 for gaming
-  controlDevice(deviceId, 'input:HDMI1')
-    .then(() => {
+  try {
+    // Check current input source
+    const status = await getDeviceStatus(deviceId);
+    const currentInput = status.inputSource;
+    
+    // Only switch to game mode if not already in HDMI1
+    if (currentInput !== 'HDMI1') {
+      await controlDevice(deviceId, 'input:HDMI1');
       toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game mode`);
-    })
-    .catch(error => {
-      console.error('Failed to switch TV to game mode:', error);
-      toast.error(`Failed to switch ${timers[deviceId]?.label} to game mode`);
-    });
+    } else {
+      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes`);
+    }
+  } catch (error) {
+    console.error('Failed to check or switch TV input:', error);
+    toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes`);
+  }
 };
