@@ -121,7 +121,8 @@ export const extendTimer = async (
   try {
     // Check current input source
     const status = await getDeviceStatus(deviceId);
-    const currentInput = status.inputSource;
+    // Fix: Correctly navigate the DeviceStatus structure to get the inputSource
+    const currentInput = status.components.main?.mediaInputSource?.inputSource?.value;
     
     // Only switch to game mode if not already in HDMI1
     if (currentInput !== 'HDMI1') {
