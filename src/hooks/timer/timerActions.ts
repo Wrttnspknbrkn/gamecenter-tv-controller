@@ -118,13 +118,13 @@ export const extendTimer = (
   });
   
   // Switch back to game mode when timer is extended
-  // First set input to HDMI1
+  // First set input to HDMI1 for gaming
   controlDevice(deviceId, 'input:HDMI1')
     .then(() => {
-      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game input`);
+      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game mode`);
     })
     .catch(error => {
-      console.error('Failed to switch TV to game input:', error);
-      toast.error(`Failed to switch ${timers[deviceId]?.label} to game input`);
+      console.error('Failed to switch TV to game mode:', error);
+      toast.error(`Failed to switch ${timers[deviceId]?.label} to game mode`);
     });
 };

@@ -40,7 +40,6 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
       commandName = "setVolume";
       args = [10]; // Default volume level
       break;
-    // Removing the gameMode case as it's causing API errors
     default:
       // If it's an input source change
       if (command.startsWith("input:")) {

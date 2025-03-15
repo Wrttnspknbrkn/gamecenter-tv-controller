@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Volume2, Settings } from 'lucide-react';
+import { Volume2, Settings, Home, Gamepad, Tv } from 'lucide-react';
 import { controlDevice } from '@/services/smartThingsService';
+import { Separator } from '@/components/ui/separator';
 
 interface TVControlsProps {
   tvId: string;
@@ -20,6 +21,31 @@ export function TVControls({ tvId, isOn }: TVControlsProps) {
       </PopoverTrigger>
       <PopoverContent side="top" className="w-56">
         <div className="grid gap-2">
+          <h4 className="text-sm font-medium mb-1">TV Input</h4>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              onClick={() => controlDevice(tvId, 'input:home')}
+              disabled={!isOn}
+            >
+              <Home className="h-4 w-4" /> Home
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              onClick={() => controlDevice(tvId, 'input:HDMI1')}
+              disabled={!isOn}
+            >
+              <Gamepad className="h-4 w-4" /> Game Mode
+            </Button>
+          </div>
+          
+          <Separator className="my-2" />
+          
+          <h4 className="text-sm font-medium mb-1">Volume Controls</h4>
           <Button 
             variant="secondary" 
             size="sm" 
