@@ -12,6 +12,7 @@ import { TVStatusIndicator } from './tv/TVStatusIndicator';
 import { TVTimerControl } from './tv/TVTimerControl';
 import { TVQuickSetup } from './tv/TVQuickSetup';
 import { TVControls } from './tv/TVControls';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TVCardProps {
   tv: TvDevice;
@@ -50,73 +51,82 @@ export function TVCard({
   const isTimerActive = hasTimer && timer.isActive;
 
   return (
-    <Card className={cn(
-      "h-full overflow-hidden transition-all duration-500 animate-scale-in",
-      "hover:shadow-lg hover:shadow-primary/10 border",
-      isOn ? "border-primary/20" : "border-muted/50"
-    )}>
-      <CardHeader className="relative">
-        <div className="absolute right-4 top-4 flex items-center gap-2">
-          <TVStatusIndicator 
-            isOn={isOn} 
-            hasTimer={hasTimer} 
-            isTimerActive={isTimerActive} 
-          />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePowerToggle}
-            disabled={isLoading}
-            className={cn(
-              "transition-colors duration-300",
-              isOn ? "text-primary hover:text-primary/80" : "text-muted-foreground"
-            )}
-          >
-            <Power className={cn(isOn ? "text-primary" : "text-muted-foreground")} />
-          </Button>
-        </div>
+    <TooltipProvider>
+      <Card className={cn(
+        "h-full overflow-hidden transition-all duration-500 animate-scale-in",
+        "hover:shadow-lg hover:shadow-primary/10 border",
+        isOn ? "border-primary/20" : "border-muted/50"
+      )}>
+        <CardHeader className="relative">
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <TVStatusIndicator 
+              isOn={isOn} 
+              hasTimer={hasTimer} 
+              isTimerActive={isTimerActive} 
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handlePowerToggle}
+                  disabled={isLoading}
+                  className={cn(
+                    "transition-colors duration-300",
+                    isOn ? "text-primary hover:text-primary/80" : "text-muted-foreground"
+                  )}
+                >
+                  <Power className={cn(isOn ? "text-primary" : "text-muted-foreground")} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isOn ? 'Turn off TV' : 'Turn on TV'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Tv className="h-5 w-5 text-primary" />
+            <CardTitle className="text-balance">{tv.label}</CardTitle>
+          </div>
+          <CardDescription className="flex items-center gap-1.5">
+            <span className="font-medium">{tv.name}</span>
+            <span className="text-xs px-1.5 py-0.5 rounded bg-secondary">
+              {isOn ? 'Online' : 'Offline'}
+            </span>
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {isOn ? (
+            <TVTimerControl
+              isOn={isOn}
+              timer={timer}
+              onStartTimer={onStartTimer}
+              onPauseTimer={onPauseTimer}
+              onResumeTimer={onResumeTimer}
+              onStopTimer={onStopTimer}
+              onExtendTimer={onExtendTimer}
+              formatTime={formatTime}
+            />
+          ) : (
+            <TVQuickSetup 
+              tvId={tv.id} 
+              onSetupComplete={onStartTimer} 
+            />
+          )}
+        </CardContent>
         
-        <div className="flex items-center gap-2">
-          <Tv className="h-5 w-5 text-primary" />
-          <CardTitle className="text-balance">{tv.label}</CardTitle>
-        </div>
-        <CardDescription className="flex items-center gap-1.5">
-          <span className="font-medium">{tv.name}</span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-secondary">
-            {isOn ? 'Online' : 'Offline'}
+        <Separator className="my-1" />
+
+        <CardFooter className="flex justify-between py-3">
+          <TVControls tvId={tv.id} isOn={isOn} />
+          
+          <span className="text-xs text-muted-foreground">
+            ID: {tv.id.substring(0, 8)}...
           </span>
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        {isOn ? (
-          <TVTimerControl
-            isOn={isOn}
-            timer={timer}
-            onStartTimer={onStartTimer}
-            onPauseTimer={onPauseTimer}
-            onResumeTimer={onResumeTimer}
-            onStopTimer={onStopTimer}
-            onExtendTimer={onExtendTimer}
-            formatTime={formatTime}
-          />
-        ) : (
-          <TVQuickSetup 
-            tvId={tv.id} 
-            onSetupComplete={onStartTimer} 
-          />
-        )}
-      </CardContent>
-      
-      <Separator className="my-1" />
-
-      <CardFooter className="flex justify-between py-3">
-        <TVControls tvId={tv.id} isOn={isOn} />
-        
-        <span className="text-xs text-muted-foreground">
-          ID: {tv.id.substring(0, 8)}...
-        </span>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </TooltipProvider>
   );
 }
