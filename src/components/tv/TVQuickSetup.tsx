@@ -16,8 +16,8 @@ interface TVQuickSetupProps {
 export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useGameMode, setUseGameMode] = useState<boolean>(true);
-  const [timerDuration, setTimerDuration] = useState<number>(60);
-  const [setupDelay, setSetupDelay] = useState<number>(2);
+  const [timerDuration, setTimerDuration] = useState<number>(20); // Changed from 60 to 20
+  const [setupDelay, setSetupDelay] = useState<number>(1); // Changed from 2 to 1
 
   const handleQuickSetup = async () => {
     setIsLoading(true);

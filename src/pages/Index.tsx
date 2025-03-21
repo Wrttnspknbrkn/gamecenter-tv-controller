@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +9,7 @@ import { useTimerControl } from '@/hooks/useTimerControl';
 import { toast } from 'sonner';
 import { RefreshCcw, MonitorSmartphone } from 'lucide-react';
 import { TokenSettings } from '@/components/TokenSettings';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function Index() {
   const [tvDevices, setTvDevices] = useState<TvDevice[]>([]);
@@ -94,17 +96,26 @@ export default function Index() {
             
             <div className="flex items-center gap-2 sm:gap-4">
               <TokenSettings />
-              <Button 
-                variant="outline"
-                onClick={fetchDevices}
-                disabled={refreshing}
-                className="flex items-center gap-2"
-                size="sm"
-                aria-label="Refresh devices"
-              >
-                <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      onClick={fetchDevices}
+                      disabled={refreshing}
+                      className="flex items-center gap-2"
+                      size="sm"
+                      aria-label="Refresh devices"
+                    >
+                      <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                      <span className="hidden sm:inline">Refresh</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh TV status</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </header>

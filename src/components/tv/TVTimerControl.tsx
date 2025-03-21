@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Clock, PlayCircle, PauseCircle, StopCircle, Plus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TimerState } from '@/hooks/useTimerControl';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TVTimerControlProps {
   isOn: boolean;
@@ -27,7 +28,7 @@ export function TVTimerControl({
   onExtendTimer,
   formatTime
 }: TVTimerControlProps) {
-  const [timerDuration, setTimerDuration] = useState<number>(30);
+  const [timerDuration, setTimerDuration] = useState<number>(20); // Changed from 30 to 20
   const [extendDuration, setExtendDuration] = useState<number>(15);
 
   const hasTimer = !!timer;
@@ -83,25 +84,61 @@ export function TVTimerControl({
       {hasTimer && (
         <div className="flex flex-wrap gap-2">
           {isTimerActive ? (
-            <Button variant="outline" onClick={onPauseTimer} className="flex gap-1">
-              <PauseCircle className="h-4 w-4" /> Pause
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={onPauseTimer} className="flex gap-1">
+                    <PauseCircle className="h-4 w-4" /> Pause
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Pause the timer</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
-            <Button variant="outline" onClick={onResumeTimer} className="flex gap-1">
-              <PlayCircle className="h-4 w-4" /> Resume
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={onResumeTimer} className="flex gap-1">
+                    <PlayCircle className="h-4 w-4" /> Resume
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Resume the timer</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           
-          <Button variant="outline" onClick={onStopTimer} className="flex gap-1 text-destructive hover:text-destructive">
-            <StopCircle className="h-4 w-4" /> Stop
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={onStopTimer} className="flex gap-1 text-destructive hover:text-destructive">
+                  <StopCircle className="h-4 w-4" /> Stop
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Stop timer and return to home screen</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex gap-1 ml-auto">
-                <Plus className="h-4 w-4" /> Extend
-              </Button>
-            </PopoverTrigger>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex gap-1 ml-auto">
+                      <Plus className="h-4 w-4" /> Extend
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Extend timer and switch to game mode</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <PopoverContent className="w-56 p-2">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

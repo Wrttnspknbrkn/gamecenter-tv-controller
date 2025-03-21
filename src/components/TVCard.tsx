@@ -12,6 +12,7 @@ import { TVStatusIndicator } from './tv/TVStatusIndicator';
 import { TVTimerControl } from './tv/TVTimerControl';
 import { TVQuickSetup } from './tv/TVQuickSetup';
 import { TVControls } from './tv/TVControls';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TVCardProps {
   tv: TvDevice;
@@ -62,18 +63,27 @@ export function TVCard({
             hasTimer={hasTimer} 
             isTimerActive={isTimerActive} 
           />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePowerToggle}
-            disabled={isLoading}
-            className={cn(
-              "transition-colors duration-300",
-              isOn ? "text-primary hover:text-primary/80" : "text-muted-foreground"
-            )}
-          >
-            <Power className={cn(isOn ? "text-primary" : "text-muted-foreground")} />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handlePowerToggle}
+                  disabled={isLoading}
+                  className={cn(
+                    "transition-colors duration-300",
+                    isOn ? "text-primary hover:text-primary/80" : "text-muted-foreground"
+                  )}
+                >
+                  <Power className={cn(isOn ? "text-primary" : "text-muted-foreground")} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isOn ? 'Power Off' : 'Power On'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         <div className="flex items-center gap-2">
