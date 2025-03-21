@@ -52,8 +52,8 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
         
         // Handle timer end
         if (timerEnded) {
-          // Switch to digitalTv input instead of TV which was causing the error
-          controlDevice(endedDeviceId, 'input:digitalTv')
+          // Switch to home screen when timer ends
+          controlDevice(endedDeviceId, 'home')
             .then(() => {
               toast.success(`Timer ended: ${endedDeviceLabel} switched to home screen`);
             })

@@ -80,6 +80,16 @@ export const stopTimer = (
   timers: TimersState,
   setTimers: React.Dispatch<React.SetStateAction<TimersState>>
 ) => {
+  // When the timer is stopped, switch to home or digital TV
+  controlDevice(deviceId, 'home')
+    .then(() => {
+      toast.info(`Switched ${timers[deviceId]?.label} to home screen`);
+    })
+    .catch(error => {
+      console.error('Failed to switch TV to home screen:', error);
+      toast.error(`Failed to switch ${timers[deviceId]?.label} to home screen`);
+    });
+
   setTimers(prevTimers => {
     const updatedTimers = { ...prevTimers };
     delete updatedTimers[deviceId];
@@ -95,36 +105,36 @@ export const extendTimer = (
   timers: TimersState,
   setTimers: React.Dispatch<React.SetStateAction<TimersState>>
 ) => {
-  setTimers(prevTimers => {
-    if (!prevTimers[deviceId]) return prevTimers;
-    
-    const timer = prevTimers[deviceId];
-    const additionalSeconds = additionalMinutes * 60;
-    const newRemainingSeconds = timer.remainingSeconds + additionalSeconds;
-    
-    let newEndTime = timer.endTime;
-    if (timer.isActive && timer.endTime) {
-      newEndTime = timer.endTime + additionalSeconds * 1000;
-    }
-    
-    return {
-      ...prevTimers,
-      [deviceId]: {
-        ...timer,
-        remainingSeconds: newRemainingSeconds,
-        endTime: newEndTime
-      }
-    };
-  });
-  
-  // Switch back to game mode when timer is extended
-  // First set input to HDMI1
-  controlDevice(deviceId, 'input:HDMI1')
+  // First switch to game mode
+  controlDevice(deviceId, 'gameMode')
     .then(() => {
-      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game input`);
+      // After switching to game mode, update the timer
+      setTimers(prevTimers => {
+        if (!prevTimers[deviceId]) return prevTimers;
+        
+        const timer = prevTimers[deviceId];
+        const additionalSeconds = additionalMinutes * 60;
+        const newRemainingSeconds = timer.remainingSeconds + additionalSeconds;
+        
+        // Automatically make timer active when extended
+        const isActive = true;
+        let newEndTime = calculateEndTime(newRemainingSeconds);
+        
+        return {
+          ...prevTimers,
+          [deviceId]: {
+            ...timer,
+            remainingSeconds: newRemainingSeconds,
+            endTime: newEndTime,
+            isActive // Always set to active when extending
+          }
+        };
+      });
+      
+      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game mode`);
     })
     .catch(error => {
-      console.error('Failed to switch TV to game input:', error);
-      toast.error(`Failed to switch ${timers[deviceId]?.label} to game input`);
+      console.error('Failed to switch TV to game mode:', error);
+      toast.error(`Failed to switch ${timers[deviceId]?.label} to game mode`);
     });
 };

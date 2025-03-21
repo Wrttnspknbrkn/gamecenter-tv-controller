@@ -40,7 +40,23 @@ export async function controlDevice(deviceId: string, command: DeviceCommand): P
       commandName = "setVolume";
       args = [10]; // Default volume level
       break;
-    // Removing the gameMode case as it's causing API errors
+    // Source controls
+    case "home":
+      capability = "mediaInputSource";
+      commandName = "setInputSource";
+      args = ["digitalTv"]; // Many TVs use digitalTv for home screen
+      break;
+    case "digitalTV":
+      capability = "mediaInputSource";
+      commandName = "setInputSource";
+      args = ["digitalTv"];
+      break;
+    case "gameMode":
+      capability = "mediaInputSource";
+      commandName = "setInputSource";
+      args = ["HDMI1"]; // Typically game consoles are on HDMI1
+      break;
+    // Default for other input sources
     default:
       // If it's an input source change
       if (command.startsWith("input:")) {
@@ -86,13 +102,13 @@ export async function setupTVForCustomer(
     // Step 1: Power on the TV
     await controlDevice(deviceId, "on");
     
-    // Small delay to ensure TV is ready for next commands
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Increased delay to ensure TV is fully ready for next commands (was 3000ms)
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Step 2: If game mode is enabled, set the TV to HDMI1
     if (config.useGameMode) {
       // Set input to HDMI1 for PlayStation
-      await controlDevice(deviceId, "input:HDMI1");
+      await controlDevice(deviceId, "gameMode");
     }
     
     toast.success(`TV setup complete for new customer`);

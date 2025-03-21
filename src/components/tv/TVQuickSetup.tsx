@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Gamepad2, Tv } from 'lucide-react';
+import { Gamepad2, Tv, Clock } from 'lucide-react';
 import { setupTVForCustomer } from '@/services/devices/deviceControlService';
+import { toast } from 'sonner';
 
 interface TVQuickSetupProps {
   tvId: string;
@@ -16,6 +17,7 @@ export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useGameMode, setUseGameMode] = useState<boolean>(true);
   const [timerDuration, setTimerDuration] = useState<number>(60);
+  const [setupDelay, setSetupDelay] = useState<number>(2);
 
   const handleQuickSetup = async () => {
     setIsLoading(true);
@@ -26,7 +28,13 @@ export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
       });
       
       if (success && timerDuration > 0) {
-        onSetupComplete(timerDuration);
+        // Add a delay before starting the timer to give the user time to get ready
+        toast.info(`Starting timer in ${setupDelay} minutes...`);
+        
+        setTimeout(() => {
+          onSetupComplete(timerDuration);
+          toast.success(`Timer started after setup delay`);
+        }, setupDelay * 60 * 1000); // Convert minutes to milliseconds
       }
     } finally {
       setIsLoading(false);
@@ -63,6 +71,22 @@ export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
             className="w-16 h-8 text-sm"
           />
           <span className="text-xs text-muted-foreground">minutes</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label htmlFor={`delay-${tvId}`} className="text-sm whitespace-nowrap flex items-center">
+            <Clock className="h-3 w-3 mr-1" /> Delay
+          </Label>
+          <Input
+            id={`delay-${tvId}`}
+            type="number"
+            min={0}
+            max={10}
+            value={setupDelay}
+            onChange={e => setSetupDelay(Number(e.target.value))}
+            className="w-16 h-8 text-sm"
+          />
+          <span className="text-xs text-muted-foreground">minutes before timer starts</span>
         </div>
         
         <Button 
