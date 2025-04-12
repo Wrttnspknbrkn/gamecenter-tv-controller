@@ -12,3 +12,29 @@ export interface TimerState {
 }
 
 export type TimersState = Record<string, TimerState>;
+
+export interface CompletedTimer {
+  deviceId: string;
+  label: string;
+  durationMinutes: number;
+  startedAt: string;
+  completedAt: string;
+}
+
+export interface DailyUsage {
+  date: string;
+  count: number;
+  totalMinutes: number;
+}
+
+export interface HourlyUsage {
+  hour: number;
+  count: number;
+}
+
+export interface DeviceUsage {
+  deviceId: string;
+  label: string;
+  count: number;
+  totalMinutes: number;
+}

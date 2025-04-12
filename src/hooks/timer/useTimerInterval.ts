@@ -1,97 +1,90 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { TimersState } from './timerTypes';
-import { controlDevice } from '@/services/devices/deviceControlService';
+import { useRef, useCallback } from 'react';
 import { toast } from 'sonner';
+import { TimersState, TimerState } from './timerTypes';
+import { calculateRemainingSeconds } from './timerUtils';
 
 /**
- * Hook to manage the timer interval for countdown
+ * Hook to handle the timer interval for updating remaining time
  */
-export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<React.SetStateAction<TimersState>>) {
-  const [intervalId, setIntervalId] = useState<number | null>(null);
+export function useTimerInterval(
+  timers: TimersState, 
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>,
+  onTimerComplete?: (timer: TimerState) => void
+) {
+  const intervalRef = useRef<number | null>(null);
 
-  // Start the timer update interval
-  const startTimerInterval = useCallback(() => {
-    if (intervalId) return;
-    
-    const id = window.setInterval(() => {
-      setTimers(prevTimers => {
-        const updatedTimers = { ...prevTimers };
-        let hasActiveTimers = false;
-        let timerEnded = false;
-        let endedDeviceId = '';
-        let endedDeviceLabel = '';
-        
-        // Update each timer
-        Object.entries(updatedTimers).forEach(([deviceId, timer]) => {
-          if (timer.isActive) {
-            const newRemainingSeconds = timer.remainingSeconds - 1;
-            
-            if (newRemainingSeconds <= 0) {
-              // Timer has ended
-              updatedTimers[deviceId] = {
-                ...timer,
-                remainingSeconds: 0,
-                isActive: false,
-                endTime: null
-              };
-              
-              timerEnded = true;
-              endedDeviceId = deviceId;
-              endedDeviceLabel = timer.label;
-            } else {
-              // Timer is still active
-              updatedTimers[deviceId] = {
-                ...timer,
-                remainingSeconds: newRemainingSeconds
-              };
-              hasActiveTimers = true;
-            }
-          }
-        });
-        
-        // Handle timer end
-        if (timerEnded) {
-          // Switch to home screen when timer ends
-          controlDevice(endedDeviceId, 'home')
-            .then(() => {
-              toast.success(`Timer ended: ${endedDeviceLabel} switched to home screen`);
-            })
-            .catch(error => {
-              console.error('Failed to switch TV to home screen:', error);
-              toast.error(`Failed to switch ${endedDeviceLabel} to home screen`);
-            });
-        }
-        
-        // Clear interval if no active timers
-        if (!hasActiveTimers && intervalId) {
-          window.clearInterval(intervalId);
-          setIntervalId(null);
-        }
-        
-        return updatedTimers;
-      });
-    }, 1000);
-    
-    setIntervalId(id);
-  }, [intervalId, setTimers]);
-
-  // Clean up interval on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalId) {
-        window.clearInterval(intervalId);
-      }
-    };
-  }, [intervalId]);
-
-  // Check if we need to start interval when timers change
-  useEffect(() => {
-    const hasActiveTimers = Object.values(timers).some(timer => timer.isActive);
-    if (hasActiveTimers && !intervalId) {
-      startTimerInterval();
+  // Function to clear the interval
+  const clearTimerInterval = useCallback(() => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }, [timers, intervalId, startTimerInterval]);
+  }, []);
 
-  return { startTimerInterval };
+  // Function to update timers every second
+  const updateTimers = useCallback(() => {
+    setTimers(prevTimers => {
+      const updatedTimers: TimersState = {};
+      let hasActiveTimers = false;
+      
+      // Go through each timer
+      Object.entries(prevTimers).forEach(([deviceId, timer]) => {
+        if (timer.isActive && timer.endTime) {
+          // Calculate how many seconds are left
+          const remainingSeconds = calculateRemainingSeconds(timer.endTime);
+          
+          if (remainingSeconds <= 0) {
+            // Timer has expired
+            toast.info(`Timer expired for ${timer.label || 'TV'}`);
+            
+            // Call the onTimerComplete callback if provided
+            if (onTimerComplete) {
+              onTimerComplete(timer);
+            }
+            
+            // Remove from active timers
+            // Note: We don't add it to updatedTimers so it gets removed
+          } else {
+            // Timer is still active
+            updatedTimers[deviceId] = {
+              ...timer,
+              remainingSeconds
+            };
+            hasActiveTimers = true;
+          }
+        } else {
+          // Timer is paused or not active, just copy it
+          updatedTimers[deviceId] = timer;
+          
+          // Check if there's any active timer
+          if (timer.isActive) {
+            hasActiveTimers = true;
+          }
+        }
+      });
+      
+      // If no active timers left, clear the interval
+      if (!hasActiveTimers) {
+        clearTimerInterval();
+      }
+      
+      return updatedTimers;
+    });
+  }, [setTimers, clearTimerInterval, onTimerComplete]);
+
+  // Start the timer interval
+  const startTimerInterval = useCallback(() => {
+    // Clear any existing interval
+    clearTimerInterval();
+    
+    // Start a new interval
+    intervalRef.current = window.setInterval(updateTimers, 1000);
+  }, [clearTimerInterval, updateTimers]);
+
+  return { 
+    startTimerInterval, 
+    clearTimerInterval,
+    onTimerComplete 
+  };
 }
