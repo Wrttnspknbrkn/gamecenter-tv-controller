@@ -9,6 +9,7 @@ export interface TimerState {
   remainingSeconds: number;
   isActive: boolean;
   endTime: number | null;
+  totalDuration?: number; // Total duration in seconds when timer was created
 }
 
 export type TimersState = Record<string, TimerState>;
