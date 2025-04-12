@@ -82,15 +82,20 @@ export function useTimerStorage() {
     // Convert to minutes, ensuring we don't record negative durations
     const durationMinutes = Math.max(1, Math.round(usedDurationSeconds / 60));
     
-    // Calculate start time based on when the timer was actually started
-    // For naturally completed timers or stopped timers, this gives accurate start time
-    const startedAt = new Date(new Date().getTime() - usedDurationSeconds * 1000).toISOString();
+    // Get the current end time
+    const completedAt = new Date().toISOString();
+    
+    // Calculate the start time by subtracting the actual used duration from the end time
+    // This ensures start and end times are properly differentiated
+    const startTime = new Date();
+    startTime.setSeconds(startTime.getSeconds() - usedDurationSeconds);
+    const startedAt = startTime.toISOString();
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
       label: timer.label,
       durationMinutes: durationMinutes,
-      completedAt: new Date().toISOString(),
+      completedAt: completedAt,
       startedAt: startedAt
     };
     
