@@ -76,27 +76,36 @@ export function useTimerStorage() {
     
     // Calculate actual used duration (original duration - remaining time)
     // If timer was stopped early, this will be the time actually used
-    // If timer completed naturally, remaining seconds would be near 0
     const usedDurationSeconds = originalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
     
-    // Convert to minutes, ensuring we don't record negative durations
+    // Convert to minutes for storage, ensuring we don't record negative durations
     const durationMinutes = Math.max(1, Math.round(usedDurationSeconds / 60));
     
-    // Get the current end time
-    const completedAt = new Date().toISOString();
+    // Get the current time for completion timestamp
+    const completionTime = new Date();
+    const completedAt = completionTime.toISOString();
     
-    // Calculate the start time by subtracting the actual used duration from the end time
-    // This ensures start and end times are properly differentiated
-    const startTime = new Date();
-    startTime.setSeconds(startTime.getSeconds() - usedDurationSeconds);
+    // Calculate the start time by working backwards from completion time
+    // This properly sets the start time relative to the actual end time
+    const startTime = new Date(completionTime.getTime() - (usedDurationSeconds * 1000));
     const startedAt = startTime.toISOString();
+    
+    console.log('Recording completed timer:', {
+      deviceId: timer.deviceId,
+      label: timer.label,
+      originalDurationSeconds,
+      usedDurationSeconds,
+      durationMinutes,
+      startedAt,
+      completedAt
+    });
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
       label: timer.label,
       durationMinutes: durationMinutes,
-      completedAt: completedAt,
-      startedAt: startedAt
+      startedAt: startedAt,
+      completedAt: completedAt
     };
     
     setCompletedTimers(prev => [...prev, completedTimer]);
