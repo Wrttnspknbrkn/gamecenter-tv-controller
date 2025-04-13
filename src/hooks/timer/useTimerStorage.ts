@@ -67,53 +67,31 @@ export function useTimerStorage() {
   }, [completedTimers]);
 
   /**
-   * Record a completed timer with accurate start and end timestamps
+   * Record a completed timer
    */
   const recordCompletedTimer = (timer: TimerState) => {
-    // Get the current time for completion timestamp
-    const completionTime = new Date();
-    const completedAt = completionTime.toISOString();
+    // Calculate the original duration in seconds
+    // If totalDuration exists in timer, use it, otherwise calculate from remainingSeconds
+    const originalDurationSeconds = timer.totalDuration || timer.remainingSeconds;
     
-    // Calculate the actual duration in seconds that was used
-    let usedDurationSeconds = 0;
+    // Calculate actual used duration (original duration - remaining time)
+    // If timer was stopped early, this will be the time actually used
+    // If timer completed naturally, remaining seconds would be near 0
+    const usedDurationSeconds = originalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
     
-    if (timer.totalDuration) {
-      // If we have totalDuration, use it to calculate used time
-      // For active timers, subtract remaining time; for stopped timers, use the full duration
-      usedDurationSeconds = timer.isActive 
-        ? timer.totalDuration - timer.remainingSeconds 
-        : timer.totalDuration;
-    } else {
-      // Fallback: Use the remaining seconds directly (less accurate)
-      usedDurationSeconds = timer.remainingSeconds;
-    }
+    // Convert to minutes, ensuring we don't record negative durations
+    const durationMinutes = Math.max(1, Math.round(usedDurationSeconds / 60));
     
-    // Ensure we don't record negative durations
-    usedDurationSeconds = Math.max(1, usedDurationSeconds);
-    
-    // Convert to minutes for storage and display
-    const durationMinutes = Math.round(usedDurationSeconds / 60);
-    
-    // Calculate the start time by working backwards from completion time
-    const startTime = new Date(completionTime.getTime() - (usedDurationSeconds * 1000));
-    const startedAt = startTime.toISOString();
-    
-    console.log('Recording completed timer:', {
-      deviceId: timer.deviceId,
-      label: timer.label,
-      totalDuration: timer.totalDuration,
-      usedDurationSeconds,
-      durationMinutes,
-      startedAt,
-      completedAt
-    });
+    // Calculate start time based on when the timer was actually started
+    // For naturally completed timers or stopped timers, this gives accurate start time
+    const startedAt = new Date(new Date().getTime() - usedDurationSeconds * 1000).toISOString();
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
       label: timer.label,
       durationMinutes: durationMinutes,
-      startedAt: startedAt,
-      completedAt: completedAt
+      completedAt: new Date().toISOString(),
+      startedAt: startedAt
     };
     
     setCompletedTimers(prev => [...prev, completedTimer]);
