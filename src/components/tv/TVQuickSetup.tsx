@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Gamepad2, Tv, Clock } from 'lucide-react';
 import { setupTVForCustomer } from '@/services/devices/deviceControlService';
 import { toast } from 'sonner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TVQuickSetupProps {
   tvId: string;
@@ -17,8 +16,8 @@ interface TVQuickSetupProps {
 export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [useGameMode, setUseGameMode] = useState<boolean>(true);
-  const [timerDuration, setTimerDuration] = useState<number>(20);
-  const [setupDelay, setSetupDelay] = useState<number>(1);
+  const [timerDuration, setTimerDuration] = useState<number>(20); // Changed from 60 to 20
+  const [setupDelay, setSetupDelay] = useState<number>(1); // Changed from 2 to 1
 
   const handleQuickSetup = async () => {
     setIsLoading(true);
@@ -90,24 +89,15 @@ export function TVQuickSetup({ tvId, onSetupComplete }: TVQuickSetupProps) {
           <span className="text-xs text-muted-foreground">minutes before timer starts</span>
         </div>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="default" 
-                className="w-full mt-2" 
-                size="sm"
-                onClick={handleQuickSetup}
-                disabled={isLoading}
-              >
-                Power On & Setup
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Power on TV, set up game mode, and start timer</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button 
+          variant="default" 
+          className="w-full mt-2" 
+          size="sm"
+          onClick={handleQuickSetup}
+          disabled={isLoading}
+        >
+          Power On & Setup
+        </Button>
       </div>
     </div>
   );
