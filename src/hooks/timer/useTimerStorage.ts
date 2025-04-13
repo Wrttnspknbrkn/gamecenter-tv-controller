@@ -67,31 +67,32 @@ export function useTimerStorage() {
   }, [completedTimers]);
 
   /**
-   * Record a completed timer
+   * Record a completed timer with accurate timestamp and duration calculations
    */
   const recordCompletedTimer = (timer: TimerState) => {
-    // Calculate the original duration in seconds
-    // If totalDuration exists in timer, use it, otherwise calculate from remainingSeconds
-    const originalDurationSeconds = timer.totalDuration || timer.remainingSeconds;
+    // Calculate actual duration in seconds
+    const totalDurationSeconds = timer.totalDuration || timer.remainingSeconds;
     
-    // Calculate actual used duration (original duration - remaining time)
-    // If timer was stopped early, this will be the time actually used
-    // If timer completed naturally, remaining seconds would be near 0
-    const usedDurationSeconds = originalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
+    // For accurate timing:
+    // 1. If timer is active, use endTime to calculate actual duration
+    // 2. If timer was stopped early, calculate from original duration and remaining time
+    const usedDurationSeconds = timer.isActive && timer.endTime 
+      ? Math.round((timer.endTime - (Date.now() - totalDurationSeconds * 1000)) / 1000)
+      : totalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
     
     // Convert to minutes, ensuring we don't record negative durations
     const durationMinutes = Math.max(1, Math.round(usedDurationSeconds / 60));
     
-    // Calculate start time based on when the timer was actually started
-    // For naturally completed timers or stopped timers, this gives accurate start time
-    const startedAt = new Date(new Date().getTime() - usedDurationSeconds * 1000).toISOString();
+    // Start time: calculate by subtracting the actual duration from completion time
+    const currentTime = new Date();
+    const startTime = new Date(currentTime.getTime() - usedDurationSeconds * 1000);
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
       label: timer.label,
       durationMinutes: durationMinutes,
-      completedAt: new Date().toISOString(),
-      startedAt: startedAt
+      startedAt: startTime.toISOString(),
+      completedAt: currentTime.toISOString()
     };
     
     setCompletedTimers(prev => [...prev, completedTimer]);

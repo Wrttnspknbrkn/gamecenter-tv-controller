@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTimerControl } from '@/hooks/useTimerControl';
-import { format, subDays, parseISO, differenceInDays } from 'date-fns';
+import { format, subDays, parseISO, differenceInDays, differenceInMinutes } from 'date-fns';
 import { Download, BarChart2, PieChart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -160,6 +160,11 @@ export default function Analytics() {
     a.click();
   };
   
+  // Calculate total minutes across all filtered timers
+  const totalMinutes = useMemo(() => {
+    return filteredTimers.reduce((total, timer) => total + timer.durationMinutes, 0);
+  }, [filteredTimers]);
+  
   return (
     <div className="min-h-screen animate-fade-in">
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -234,7 +239,7 @@ export default function Analytics() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Total Sessions</CardTitle>
@@ -252,19 +257,7 @@ export default function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {filteredTimers.reduce((total, timer) => total + timer.durationMinutes, 0)} mins
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Average Session</CardTitle>
-              <CardDescription>Average minutes per session</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {filteredTimers.length ? Math.round(filteredTimers.reduce((total, timer) => total + timer.durationMinutes, 0) / filteredTimers.length) : 0} mins
+                {totalMinutes} mins
               </div>
             </CardContent>
           </Card>
@@ -365,29 +358,7 @@ export default function Analytics() {
                 {deviceUsage.length === 0 ? (
                   <p className="text-center py-8 text-muted-foreground">No data available for the selected time range</p>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="h-[300px]">
-                      <p className="text-sm font-medium mb-2 text-center">Sessions by TV</p>
-                      <ChartContainer config={{}}>
-                        <RechartPieChart>
-                          <Pie
-                            data={deviceUsage}
-                            dataKey="count"
-                            nameKey="label"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={100}
-                            label={(entry) => entry.label}
-                          >
-                            {deviceUsage.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </RechartPieChart>
-                      </ChartContainer>
-                    </div>
-                    
+                  <div className="grid grid-cols-1 gap-6">
                     <div className="h-[300px]">
                       <p className="text-sm font-medium mb-2 text-center">Minutes by TV</p>
                       <ChartContainer config={{}}>
@@ -417,7 +388,6 @@ export default function Analytics() {
                             <TableHead>TV Name</TableHead>
                             <TableHead className="text-right">Sessions</TableHead>
                             <TableHead className="text-right">Minutes</TableHead>
-                            <TableHead className="text-right">Avg Session</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -426,9 +396,6 @@ export default function Analytics() {
                               <TableCell className="font-medium">{device.label}</TableCell>
                               <TableCell className="text-right">{device.count}</TableCell>
                               <TableCell className="text-right">{device.totalMinutes}</TableCell>
-                              <TableCell className="text-right">
-                                {Math.round(device.totalMinutes / device.count)} mins
-                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -466,23 +433,30 @@ export default function Analytics() {
                       <TableBody>
                         {filteredTimers
                           .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
-                          .map((timer, index) => (
-                            <TableRow key={index}>
-                              <TableCell>
-                                {format(parseISO(timer.completedAt), 'MMM d, yyyy')}
-                              </TableCell>
-                              <TableCell>{timer.label}</TableCell>
-                              <TableCell>
-                                {format(parseISO(timer.startedAt), 'h:mm a')}
-                              </TableCell>
-                              <TableCell>
-                                {format(parseISO(timer.completedAt), 'h:mm a')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {timer.durationMinutes} mins
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          .map((timer, index) => {
+                            // Calculate actual duration directly from timestamps
+                            const start = parseISO(timer.startedAt);
+                            const end = parseISO(timer.completedAt);
+                            const calculatedDuration = Math.max(1, Math.round(differenceInMinutes(end, start)));
+                            
+                            return (
+                              <TableRow key={index}>
+                                <TableCell>
+                                  {format(parseISO(timer.completedAt), 'MMM d, yyyy')}
+                                </TableCell>
+                                <TableCell>{timer.label}</TableCell>
+                                <TableCell>
+                                  {format(parseISO(timer.startedAt), 'h:mm a')}
+                                </TableCell>
+                                <TableCell>
+                                  {format(parseISO(timer.completedAt), 'h:mm a')}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {calculatedDuration} mins
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                       </TableBody>
                     </Table>
                   </div>
