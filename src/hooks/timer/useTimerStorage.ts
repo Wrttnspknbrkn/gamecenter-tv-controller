@@ -70,22 +70,29 @@ export function useTimerStorage() {
    * Record a completed timer with accurate timestamp and duration calculations
    */
   const recordCompletedTimer = (timer: TimerState) => {
-    // Calculate actual duration in seconds
+    // Get the original total duration in seconds
     const totalDurationSeconds = timer.totalDuration || timer.remainingSeconds;
     
-    // For accurate timing:
-    // 1. If timer is active, use endTime to calculate actual duration
-    // 2. If timer was stopped early, calculate from original duration and remaining time
-    const usedDurationSeconds = timer.isActive && timer.endTime 
-      ? Math.round((timer.endTime - (Date.now() - totalDurationSeconds * 1000)) / 1000)
-      : totalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
+    // Calculate the actual used duration in seconds
+    let usedDurationSeconds: number;
     
-    // Convert to minutes, ensuring we don't record negative durations
-    const durationMinutes = Math.max(1, Math.round(usedDurationSeconds / 60));
+    if (timer.isActive && timer.endTime) {
+      // For active timers with an end time, calculate from end time and elapsed time
+      const elapsedSeconds = Math.round((Date.now() - (timer.endTime - timer.remainingSeconds * 1000)) / 1000);
+      usedDurationSeconds = elapsedSeconds;
+    } else {
+      // For stopped or paused timers, use the difference between total and remaining
+      usedDurationSeconds = totalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
+    }
     
-    // Start time: calculate by subtracting the actual duration from completion time
+    // Convert to minutes, making sure to preserve the original duration
+    // Use ceiling to ensure we don't round down to zero for short sessions
+    // and also to ensure a 2-minute timer doesn't become 1 minute due to rounding
+    const durationMinutes = Math.ceil(usedDurationSeconds / 60);
+    
+    // Calculate actual start time based on when the timer was completed
     const currentTime = new Date();
-    const startTime = new Date(currentTime.getTime() - usedDurationSeconds * 1000);
+    const startTime = new Date(currentTime.getTime() - (usedDurationSeconds * 1000));
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
@@ -94,6 +101,21 @@ export function useTimerStorage() {
       startedAt: startTime.toISOString(),
       completedAt: currentTime.toISOString()
     };
+    
+    console.log('Recording completed timer:', {
+      original: {
+        totalDuration: totalDurationSeconds,
+        remainingSeconds: timer.remainingSeconds,
+        isActive: timer.isActive,
+        endTime: timer.endTime
+      },
+      calculated: {
+        usedDurationSeconds,
+        durationMinutes,
+        startTime: startTime.toISOString(),
+        completedTime: currentTime.toISOString()
+      }
+    });
     
     setCompletedTimers(prev => [...prev, completedTimer]);
   };

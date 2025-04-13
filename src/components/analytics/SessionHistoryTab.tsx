@@ -36,10 +36,8 @@ export function SessionHistoryTab({ filteredTimers }: SessionHistoryTabProps) {
                 {filteredTimers
                   .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
                   .map((timer, index) => {
-                    // Calculate actual duration directly from timestamps
-                    const start = parseISO(timer.startedAt);
-                    const end = parseISO(timer.completedAt);
-                    const calculatedDuration = Math.max(1, Math.round(differenceInMinutes(end, start)));
+                    // Use the stored duration directly instead of recalculating
+                    const durationMinutes = timer.durationMinutes;
                     
                     return (
                       <TableRow key={index}>
@@ -54,7 +52,7 @@ export function SessionHistoryTab({ filteredTimers }: SessionHistoryTabProps) {
                           {format(parseISO(timer.completedAt), 'h:mm a')}
                         </TableCell>
                         <TableCell className="text-right">
-                          {calculatedDuration} mins
+                          {durationMinutes} mins
                         </TableCell>
                       </TableRow>
                     );
