@@ -70,29 +70,42 @@ export function useTimerStorage() {
    * Record a completed timer with accurate timestamp and duration calculations
    */
   const recordCompletedTimer = (timer: TimerState) => {
-    // Get the original total duration in seconds
+    // IMPORTANT: Get the original total duration in seconds
     const totalDurationSeconds = timer.totalDuration || timer.remainingSeconds;
     
-    // Calculate the actual used duration in seconds
-    let usedDurationSeconds: number;
+    // Fix calculation: Ensure we're capturing the full duration that was set
+    // For a timer set to 2 minutes (120 seconds), we should record 2 minutes
+    let durationMinutes: number;
     
-    if (timer.isActive && timer.endTime) {
-      // For active timers with an end time, calculate from end time and elapsed time
-      const elapsedSeconds = Math.round((Date.now() - (timer.endTime - timer.remainingSeconds * 1000)) / 1000);
-      usedDurationSeconds = elapsedSeconds;
+    // Log the timer state for debugging
+    console.log('Timer being completed:', {
+      deviceId: timer.deviceId,
+      label: timer.label,
+      totalDuration: totalDurationSeconds,
+      remainingSeconds: timer.remainingSeconds,
+      isActive: timer.isActive
+    });
+    
+    // For timers that completed normally, use the original total duration
+    if (timer.totalDuration) {
+      // Use the originally set duration in minutes (e.g., 2-minute timer = 2 minutes)
+      durationMinutes = Math.ceil(timer.totalDuration / 60);
+      console.log(`Using original duration: ${durationMinutes} minutes`);
     } else {
-      // For stopped or paused timers, use the difference between total and remaining
-      usedDurationSeconds = totalDurationSeconds - (timer.isActive ? timer.remainingSeconds : 0);
+      // Fallback to calculating from what we know
+      // Always round up to ensure 1:59 becomes 2 minutes not 1
+      const usedDurationSeconds = totalDurationSeconds - (timer.remainingSeconds || 0);
+      durationMinutes = Math.max(1, Math.ceil(usedDurationSeconds / 60));
+      console.log(`Calculated duration: ${durationMinutes} minutes`);
     }
     
-    // Convert to minutes, making sure to preserve the original duration
-    // Use ceiling to ensure we don't round down to zero for short sessions
-    // and also to ensure a 2-minute timer doesn't become 1 minute due to rounding
-    const durationMinutes = Math.ceil(usedDurationSeconds / 60);
+    // Ensure we never record zero minutes
+    durationMinutes = Math.max(1, durationMinutes);
     
-    // Calculate actual start time based on when the timer was completed
+    // Calculate start time by working backwards from completion time
     const currentTime = new Date();
-    const startTime = new Date(currentTime.getTime() - (usedDurationSeconds * 1000));
+    // Use the actual duration that was set in seconds for accurate start time calculation
+    const startTime = new Date(currentTime.getTime() - (totalDurationSeconds * 1000));
     
     const completedTimer: CompletedTimer = {
       deviceId: timer.deviceId,
@@ -103,18 +116,8 @@ export function useTimerStorage() {
     };
     
     console.log('Recording completed timer:', {
-      original: {
-        totalDuration: totalDurationSeconds,
-        remainingSeconds: timer.remainingSeconds,
-        isActive: timer.isActive,
-        endTime: timer.endTime
-      },
-      calculated: {
-        usedDurationSeconds,
-        durationMinutes,
-        startTime: startTime.toISOString(),
-        completedTime: currentTime.toISOString()
-      }
+      timer: completedTimer,
+      origMinutes: durationMinutes
     });
     
     setCompletedTimers(prev => [...prev, completedTimer]);

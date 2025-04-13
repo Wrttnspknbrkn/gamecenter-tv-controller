@@ -1,5 +1,5 @@
 
-import { format, parseISO, differenceInMinutes } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CompletedTimer } from '@/hooks/timer/timerTypes';
@@ -36,9 +36,7 @@ export function SessionHistoryTab({ filteredTimers }: SessionHistoryTabProps) {
                 {filteredTimers
                   .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
                   .map((timer, index) => {
-                    // Use the stored duration directly instead of recalculating
-                    const durationMinutes = timer.durationMinutes;
-                    
+                    // Use the stored duration directly as it should now be correct
                     return (
                       <TableRow key={index}>
                         <TableCell>
@@ -51,8 +49,8 @@ export function SessionHistoryTab({ filteredTimers }: SessionHistoryTabProps) {
                         <TableCell>
                           {format(parseISO(timer.completedAt), 'h:mm a')}
                         </TableCell>
-                        <TableCell className="text-right">
-                          {durationMinutes} mins
+                        <TableCell className="text-right font-medium">
+                          {timer.durationMinutes} mins
                         </TableCell>
                       </TableRow>
                     );
