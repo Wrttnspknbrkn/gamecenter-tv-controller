@@ -20,7 +20,8 @@ export const startTimer = (
       label,
       remainingSeconds: durationSeconds,
       isActive: true,
-      endTime: calculateEndTime(durationSeconds)
+      endTime: calculateEndTime(durationSeconds),
+      originalDurationMinutes: durationMinutes // Store the original duration explicitly
     }
   }));
 };
@@ -99,12 +100,20 @@ export const extendTimer = (
   const currentRemaining = timers[deviceId].remainingSeconds;
   const newRemainingSeconds = currentRemaining + additionalSeconds;
   
-  setTimers((prevTimers) => ({
-    ...prevTimers,
-    [deviceId]: {
-      ...prevTimers[deviceId],
-      remainingSeconds: newRemainingSeconds,
-      endTime: prevTimers[deviceId].isActive ? calculateEndTime(newRemainingSeconds) : null
-    }
-  }));
+  setTimers((prevTimers) => {
+    const timer = prevTimers[deviceId];
+    // Update the original duration when extending the timer
+    const originalDurationMinutes = timer.originalDurationMinutes || 
+      Math.ceil(timer.remainingSeconds / 60);
+    
+    return {
+      ...prevTimers,
+      [deviceId]: {
+        ...prevTimers[deviceId],
+        remainingSeconds: newRemainingSeconds,
+        endTime: prevTimers[deviceId].isActive ? calculateEndTime(newRemainingSeconds) : null,
+        originalDurationMinutes: originalDurationMinutes + additionalMinutes
+      }
+    };
+  });
 };

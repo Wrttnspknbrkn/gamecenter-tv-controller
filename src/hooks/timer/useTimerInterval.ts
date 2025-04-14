@@ -13,6 +13,23 @@ export function useTimerInterval(
   logCompletedSession?: (deviceId: string, deviceLabel: string, durationMinutes: number) => void
 ) {
   const [intervalId, setIntervalId] = useState<number | null>(null);
+  // Store original durations to ensure accurate reporting
+  const [originalDurations, setOriginalDurations] = useState<Record<string, number>>({});
+
+  // Track original durations when timers are added or modified
+  useEffect(() => {
+    const updatedDurations = { ...originalDurations };
+    
+    Object.entries(timers).forEach(([deviceId, timer]) => {
+      // Only set original duration if it doesn't exist yet
+      if (!updatedDurations[deviceId] && timer.remainingSeconds > 0) {
+        // Store the original duration in minutes
+        updatedDurations[deviceId] = Math.ceil(timer.remainingSeconds / 60);
+      }
+    });
+    
+    setOriginalDurations(updatedDurations);
+  }, [timers]);
 
   // Start the timer update interval
   const startTimerInterval = useCallback(() => {
@@ -33,11 +50,8 @@ export function useTimerInterval(
             const newRemainingSeconds = timer.remainingSeconds - 1;
             
             if (newRemainingSeconds <= 0) {
-              // Store original duration in minutes (important: don't round down)
-              // The original duration is what was set when the timer started
-              // For a 2-minute timer, this should be exactly 2
-              const originalDurationMinutes = Math.ceil(timer.remainingSeconds / 60);
-              timerDuration = Math.max(1, originalDurationMinutes);
+              // Use the stored original duration instead of calculating
+              timerDuration = originalDurations[deviceId] || Math.ceil(timer.remainingSeconds / 60);
               
               console.log(`Timer ended for ${timer.label}, duration: ${timerDuration} minutes`);
               
@@ -79,6 +93,13 @@ export function useTimerInterval(
               console.error('Failed to switch TV to home screen:', error);
               toast.error(`Failed to switch ${endedDeviceLabel} to home screen`);
             });
+            
+          // Clean up the original duration for this device
+          setOriginalDurations(prev => {
+            const updated = { ...prev };
+            delete updated[endedDeviceId];
+            return updated;
+          });
         }
         
         // Clear interval if no active timers
@@ -92,7 +113,7 @@ export function useTimerInterval(
     }, 1000);
     
     setIntervalId(id);
-  }, [intervalId, setTimers, logCompletedSession]);
+  }, [intervalId, setTimers, logCompletedSession, originalDurations]);
 
   // Clean up interval on unmount
   useEffect(() => {
