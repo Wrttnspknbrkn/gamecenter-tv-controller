@@ -69,14 +69,26 @@ export const resumeTimer = (
 };
 
 /**
- * Stop a timer completely
+ * Stop a timer completely and log completed session if logCompletedSession is provided
  */
 export const stopTimer = (
   deviceId: string, 
   timers: TimersState, 
-  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>,
+  logCompletedSession?: (deviceId: string, deviceLabel: string, durationMinutes: number) => void
 ) => {
   if (!timers[deviceId]) return;
+  
+  const timer = timers[deviceId];
+  const totalDurationMinutes = timer.originalDurationMinutes || 0;
+  const remainingMinutes = Math.ceil(timer.remainingSeconds / 60);
+  const completedMinutes = totalDurationMinutes - remainingMinutes;
+  
+  // Only log if the timer was actually used (more than 0 minutes)
+  if (logCompletedSession && completedMinutes > 0) {
+    logCompletedSession(deviceId, timer.label, completedMinutes);
+    console.log(`Timer stopped manually: ${timer.label}, completed: ${completedMinutes} of ${totalDurationMinutes} minutes`);
+  }
   
   setTimers((prevTimers) => {
     const updatedTimers = { ...prevTimers };

@@ -8,6 +8,7 @@ import { AnalyticsSummary } from '@/components/analytics/AnalyticsSummary';
 import { DailyUsageTab } from '@/components/analytics/DailyUsageTab';
 import { SessionHistoryTab } from '@/components/analytics/SessionHistoryTab';
 import { TVComparisonTab } from '@/components/analytics/TVComparisonTab';
+import { DailyTVUsageTab } from '@/components/analytics/DailyTVUsageTab';
 import { ExportAnalytics } from '@/components/analytics/ExportAnalytics';
 import { PopularTimesTab } from '@/components/analytics/PopularTimesTab';
 import { Home, BarChart4 } from 'lucide-react';
@@ -61,8 +62,9 @@ const Analytics = () => {
       <AnalyticsSummary analytics={analytics} dateRange={dateRange} />
 
       <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-5 max-w-3xl">
           <TabsTrigger value="daily">Daily Usage</TabsTrigger>
+          <TabsTrigger value="tvreport">TV Report</TabsTrigger>
           <TabsTrigger value="sessions">Session History</TabsTrigger>
           <TabsTrigger value="tvs">TV Comparison</TabsTrigger>
           <TabsTrigger value="popular">Popular Times</TabsTrigger>
@@ -70,6 +72,10 @@ const Analytics = () => {
         
         <TabsContent value="daily" className="mt-4">
           <DailyUsageTab analytics={analytics} dateRange={dateRange} setDateRange={setDateRange} />
+        </TabsContent>
+        
+        <TabsContent value="tvreport" className="mt-4">
+          <DailyTVUsageTab analytics={analytics} dateRange={dateRange} setDateRange={setDateRange} />
         </TabsContent>
         
         <TabsContent value="sessions" className="mt-4">
