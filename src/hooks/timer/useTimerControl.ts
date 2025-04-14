@@ -51,6 +51,3 @@ export function useTimerControl() {
     formatTime
   };
 }
-
-// Re-export types for backward compatibility
-export type { TimerState, AnalyticsState, TimerSession };
