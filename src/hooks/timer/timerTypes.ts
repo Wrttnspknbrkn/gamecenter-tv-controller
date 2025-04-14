@@ -9,6 +9,7 @@ export interface TimerState {
   remainingSeconds: number;
   isActive: boolean;
   endTime: number | null;
+  originalDurationMinutes?: number; // Added this property to fix the type error
 }
 
 export type TimersState = Record<string, TimerState>;
