@@ -21,8 +21,12 @@ export function useTimerInterval(
     const updatedDurations = { ...originalDurations };
     
     Object.entries(timers).forEach(([deviceId, timer]) => {
-      // Only set original duration if it doesn't exist yet
-      if (!updatedDurations[deviceId] && timer.remainingSeconds > 0) {
+      // Use the explicitly stored original duration if available
+      if (timer.originalDurationMinutes && !updatedDurations[deviceId]) {
+        updatedDurations[deviceId] = timer.originalDurationMinutes;
+      }
+      // Only set original duration if it doesn't exist yet and no explicit original duration is available
+      else if (!updatedDurations[deviceId] && timer.remainingSeconds > 0 && !timer.originalDurationMinutes) {
         // Store the original duration in minutes
         updatedDurations[deviceId] = Math.ceil(timer.remainingSeconds / 60);
       }
@@ -50,10 +54,10 @@ export function useTimerInterval(
             const newRemainingSeconds = timer.remainingSeconds - 1;
             
             if (newRemainingSeconds <= 0) {
-              // Use the stored original duration instead of calculating
-              timerDuration = originalDurations[deviceId] || Math.ceil(timer.remainingSeconds / 60);
+              // First use explicitly stored original duration if available
+              timerDuration = timer.originalDurationMinutes || originalDurations[deviceId] || Math.ceil(timer.remainingSeconds / 60);
               
-              console.log(`Timer ended for ${timer.label}, duration: ${timerDuration} minutes`);
+              console.log(`Timer ended for ${timer.label}, duration: ${timerDuration} minutes, original duration: ${timer.originalDurationMinutes}`);
               
               // Timer has ended
               updatedTimers[deviceId] = {

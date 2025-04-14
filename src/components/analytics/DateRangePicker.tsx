@@ -53,6 +53,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ dateRange, set
               }
             }}
             numberOfMonths={2}
+            className="pointer-events-auto" // Add this to ensure click events work properly
           />
         </PopoverContent>
       </Popover>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ExportAnalytics } from '@/components/analytics/ExportAnalytics';
 import { PopularTimesTab } from '@/components/analytics/PopularTimesTab';
 import { Home, BarChart4 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Analytics = () => {
   const { analytics } = useTimerControl();
@@ -19,6 +20,24 @@ const Analytics = () => {
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
     to: new Date(),
   });
+
+  // Apply date filter and notify user
+  useEffect(() => {
+    // Count sessions in the selected date range
+    const sessionsInRange = analytics.sessions.filter(session => {
+      const sessionDate = new Date(session.endTime);
+      return sessionDate >= dateRange.from && sessionDate <= dateRange.to;
+    });
+    
+    // Log to console for debugging
+    console.log(`Date range: ${dateRange.from.toLocaleDateString()} to ${dateRange.to.toLocaleDateString()}`);
+    console.log(`Filtered sessions: ${sessionsInRange.length} of ${analytics.sessions.length} total`);
+    
+    // Notify user when date range changes
+    if (sessionsInRange.length === 0 && analytics.sessions.length > 0) {
+      toast.info('No sessions found in selected date range');
+    }
+  }, [dateRange, analytics.sessions]);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
