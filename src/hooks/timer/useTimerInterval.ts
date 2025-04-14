@@ -33,10 +33,13 @@ export function useTimerInterval(
             const newRemainingSeconds = timer.remainingSeconds - 1;
             
             if (newRemainingSeconds <= 0) {
-              // Calculate the original duration in minutes (ceil to handle fractional minutes)
-              timerDuration = Math.max(1, Math.ceil((timer.endTime ? 
-                (timer.endTime - Date.now() + timer.remainingSeconds * 1000) / (60 * 1000) : 
-                timer.remainingSeconds / 60)));
+              // Store original duration in minutes (important: don't round down)
+              // The original duration is what was set when the timer started
+              // For a 2-minute timer, this should be exactly 2
+              const originalDurationMinutes = Math.ceil(timer.remainingSeconds / 60);
+              timerDuration = Math.max(1, originalDurationMinutes);
+              
+              console.log(`Timer ended for ${timer.label}, duration: ${timerDuration} minutes`);
               
               // Timer has ended
               updatedTimers[deviceId] = {
