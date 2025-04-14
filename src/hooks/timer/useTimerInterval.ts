@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 /**
  * Hook to manage the timer interval for countdown
  */
-export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<React.SetStateAction<TimersState>>) {
+export function useTimerInterval(
+  timers: TimersState, 
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>,
+  logCompletedSession?: (deviceId: string, deviceLabel: string, durationMinutes: number) => void
+) {
   const [intervalId, setIntervalId] = useState<number | null>(null);
 
   // Start the timer update interval
@@ -21,6 +25,7 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
         let timerEnded = false;
         let endedDeviceId = '';
         let endedDeviceLabel = '';
+        let timerDuration = 0;
         
         // Update each timer
         Object.entries(updatedTimers).forEach(([deviceId, timer]) => {
@@ -28,6 +33,11 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
             const newRemainingSeconds = timer.remainingSeconds - 1;
             
             if (newRemainingSeconds <= 0) {
+              // Calculate the original duration in minutes (ceil to handle fractional minutes)
+              timerDuration = Math.max(1, Math.ceil((timer.endTime ? 
+                (timer.endTime - Date.now() + timer.remainingSeconds * 1000) / (60 * 1000) : 
+                timer.remainingSeconds / 60)));
+              
               // Timer has ended
               updatedTimers[deviceId] = {
                 ...timer,
@@ -52,6 +62,11 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
         
         // Handle timer end
         if (timerEnded) {
+          // Log completed session
+          if (logCompletedSession) {
+            logCompletedSession(endedDeviceId, endedDeviceLabel, timerDuration);
+          }
+          
           // Switch to home screen when timer ends
           controlDevice(endedDeviceId, 'home')
             .then(() => {
@@ -74,7 +89,7 @@ export function useTimerInterval(timers: TimersState, setTimers: React.Dispatch<
     }, 1000);
     
     setIntervalId(id);
-  }, [intervalId, setTimers]);
+  }, [intervalId, setTimers, logCompletedSession]);
 
   // Clean up interval on unmount
   useEffect(() => {

@@ -4,14 +4,14 @@ import { useTimerStorage } from './useTimerStorage';
 import { useTimerInterval } from './useTimerInterval';
 import { startTimer, pauseTimer, resumeTimer, stopTimer, extendTimer } from './timerActions';
 import { formatTime } from './timerUtils';
-import { TimerState } from './timerTypes';
+import { TimerState, AnalyticsState, TimerSession } from './timerTypes';
 
 /**
  * Main hook for timer control functionality
  */
 export function useTimerControl() {
-  const { timers, setTimers } = useTimerStorage();
-  const { startTimerInterval } = useTimerInterval(timers, setTimers);
+  const { timers, setTimers, analytics, logCompletedSession } = useTimerStorage();
+  const { startTimerInterval } = useTimerInterval(timers, setTimers, logCompletedSession);
 
   // Start a timer for a device
   const handleStartTimer = useCallback((deviceId: string, label: string, durationMinutes: number) => {
@@ -42,6 +42,7 @@ export function useTimerControl() {
 
   return {
     timers,
+    analytics,
     startTimer: handleStartTimer,
     pauseTimer: handlePauseTimer,
     resumeTimer: handleResumeTimer,
@@ -51,5 +52,5 @@ export function useTimerControl() {
   };
 }
 
-// Re-export TimerState for backward compatibility
-export type { TimerState };
+// Re-export types for backward compatibility
+export type { TimerState, AnalyticsState, TimerSession };

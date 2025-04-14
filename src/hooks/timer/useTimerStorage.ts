@@ -1,20 +1,23 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { TimerState, TimersState } from './timerTypes';
+import { TimerState, TimersState, AnalyticsState, TimerSession } from './timerTypes';
 import { calculateRemainingSeconds } from './timerUtils';
 
 const STORAGE_KEY = 'tv-timers';
+const ANALYTICS_KEY = 'tv-analytics';
 
 /**
  * Hook to handle loading and saving timers to localStorage
  */
 export function useTimerStorage() {
   const [timers, setTimers] = useState<TimersState>({});
+  const [analytics, setAnalytics] = useState<AnalyticsState>({ sessions: [] });
 
-  // Load timers from localStorage on initialization
+  // Load timers and analytics from localStorage on initialization
   useEffect(() => {
     try {
+      // Load timers
       const savedTimers = localStorage.getItem(STORAGE_KEY);
       if (savedTimers) {
         const parsedTimers = JSON.parse(savedTimers);
@@ -41,9 +44,16 @@ export function useTimerStorage() {
         
         setTimers(validTimers);
       }
+
+      // Load analytics
+      const savedAnalytics = localStorage.getItem(ANALYTICS_KEY);
+      if (savedAnalytics) {
+        const parsedAnalytics = JSON.parse(savedAnalytics);
+        setAnalytics(parsedAnalytics);
+      }
     } catch (error) {
-      console.error('Error loading saved timers:', error);
-      toast.error('Failed to load saved timers');
+      console.error('Error loading saved data:', error);
+      toast.error('Failed to load saved data');
     }
   }, []);
 
@@ -52,5 +62,26 @@ export function useTimerStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
   }, [timers]);
 
-  return { timers, setTimers };
+  // Save analytics to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
+  }, [analytics]);
+
+  // Function to log completed timer sessions
+  const logCompletedSession = (deviceId: string, deviceLabel: string, durationMinutes: number) => {
+    const session: TimerSession = {
+      id: `${deviceId}-${Date.now()}`,
+      deviceId,
+      deviceLabel,
+      startTime: Date.now() - (durationMinutes * 60 * 1000),
+      endTime: Date.now(),
+      durationMinutes
+    };
+
+    setAnalytics(prev => ({
+      sessions: [...prev.sessions, session]
+    }));
+  };
+
+  return { timers, setTimers, analytics, logCompletedSession };
 }

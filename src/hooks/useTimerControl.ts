@@ -1,4 +1,4 @@
 
 import { useTimerControl } from './timer/useTimerControl';
-export type { TimerState } from './timer/timerTypes';
+export type { TimerState, AnalyticsState, TimerSession } from './timer/timerTypes';
 export { useTimerControl };

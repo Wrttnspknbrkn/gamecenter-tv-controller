@@ -12,3 +12,17 @@ export interface TimerState {
 }
 
 export type TimersState = Record<string, TimerState>;
+
+// Analytics types
+export interface TimerSession {
+  id: string;
+  deviceId: string;
+  deviceLabel: string;
+  startTime: number;
+  endTime: number;
+  durationMinutes: number;
+}
+
+export interface AnalyticsState {
+  sessions: TimerSession[];
+}
