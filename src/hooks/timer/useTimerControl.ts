@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useTimerStorage } from './useTimerStorage';
 import { useTimerInterval } from './useTimerInterval';
 import { startTimer, pauseTimer, resumeTimer, stopTimer, extendTimer } from './timerActions';
-import { formatTimeDisplay } from './timerUtils';
+import { formatTime } from './timerUtils';
 import { controlDevice } from '@/services/devices/deviceControlService';
 import type { TimerState, TimersState, AnalyticsState } from './timerTypes';
 
@@ -97,8 +97,8 @@ export function useTimerControl() {
   /**
    * Format time remaining for display
    */
-  const formatTime = useCallback((seconds: number) => {
-    return formatTimeDisplay(seconds);
+  const formatTimeDisplay = useCallback((seconds: number) => {
+    return formatTime(seconds);
   }, []);
 
   return {
@@ -109,6 +109,6 @@ export function useTimerControl() {
     resumeTimer: handleResumeTimer,
     stopTimer: handleStopTimer,
     extendTimer: handleExtendTimer,
-    formatTime
+    formatTime: formatTimeDisplay
   };
 }
