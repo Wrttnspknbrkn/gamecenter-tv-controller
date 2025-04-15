@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { TimersState } from './timerTypes';
 import { controlDevice } from '@/services/devices/deviceControlService';
@@ -13,9 +12,7 @@ export function useTimerInterval(
   logCompletedSession?: (deviceId: string, deviceLabel: string, durationMinutes: number) => void
 ) {
   const [intervalId, setIntervalId] = useState<number | null>(null);
-  // Store original durations to ensure accurate reporting
   const [originalDurations, setOriginalDurations] = useState<Record<string, number>>({});
-  // Track which timers have already been logged to prevent duplicates
   const [loggedTimers, setLoggedTimers] = useState<Record<string, boolean>>({});
 
   // Track original durations when timers are added or modified
@@ -23,19 +20,25 @@ export function useTimerInterval(
     const updatedDurations = { ...originalDurations };
     
     Object.entries(timers).forEach(([deviceId, timer]) => {
-      // Use the explicitly stored original duration if available
+      // Reset logged status if timer becomes active again (e.g., after extension)
+      if (timer.isActive && loggedTimers[deviceId]) {
+        setLoggedTimers(prev => {
+          const updated = { ...prev };
+          delete updated[deviceId];
+          return updated;
+        });
+      }
+
+      // Update original durations tracking
       if (timer.originalDurationMinutes && !updatedDurations[deviceId]) {
         updatedDurations[deviceId] = timer.originalDurationMinutes;
-      }
-      // Only set original duration if it doesn't exist yet and no explicit original duration is available
-      else if (!updatedDurations[deviceId] && timer.remainingSeconds > 0 && !timer.originalDurationMinutes) {
-        // Store the original duration in minutes
+      } else if (!updatedDurations[deviceId] && timer.remainingSeconds > 0 && !timer.originalDurationMinutes) {
         updatedDurations[deviceId] = Math.ceil(timer.remainingSeconds / 60);
       }
     });
     
     setOriginalDurations(updatedDurations);
-  }, [timers]);
+  }, [timers, loggedTimers]);
 
   // Start the timer update interval
   const startTimerInterval = useCallback(() => {
@@ -148,7 +151,6 @@ export function useTimerInterval(
   useEffect(() => {
     setLoggedTimers(prev => {
       const updated = { ...prev };
-      // Remove logged status for timers that no longer exist
       Object.keys(updated).forEach(deviceId => {
         if (!timers[deviceId]) {
           delete updated[deviceId];
