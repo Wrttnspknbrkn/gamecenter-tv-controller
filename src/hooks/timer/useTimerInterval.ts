@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { TimersState } from './timerTypes';
 import { controlDevice } from '@/services/devices/deviceControlService';
@@ -14,19 +15,29 @@ export function useTimerInterval(
   const [intervalId, setIntervalId] = useState<number | null>(null);
   const [originalDurations, setOriginalDurations] = useState<Record<string, number>>({});
   const [loggedTimers, setLoggedTimers] = useState<Record<string, boolean>>({});
+  const [pendingExtensions, setPendingExtensions] = useState<Record<string, boolean>>({});
 
   // Track original durations when timers are added or modified
   useEffect(() => {
     const updatedDurations = { ...originalDurations };
     
     Object.entries(timers).forEach(([deviceId, timer]) => {
-      // Reset logged status if timer becomes active again (e.g., after extension)
-      if (timer.isActive && loggedTimers[deviceId]) {
+      // Check for timer that was previously ended and now extended (active again)
+      const wasEnded = loggedTimers[deviceId] && timer.isActive;
+      
+      // Reset logged status if timer becomes active again after having ended
+      if (wasEnded) {
+        console.log(`Detected re-activated timer for ${timer.label} - likely an extension after completion`);
         setLoggedTimers(prev => {
           const updated = { ...prev };
           delete updated[deviceId];
           return updated;
         });
+        // Mark this as a pending extension to track properly
+        setPendingExtensions(prev => ({
+          ...prev,
+          [deviceId]: true
+        }));
       }
 
       // Update original durations tracking
@@ -108,13 +119,6 @@ export function useTimerInterval(
               console.error('Failed to switch TV to home screen:', error);
               toast.error(`Failed to switch ${endedDeviceLabel} to home screen`);
             });
-            
-          // Clean up the original duration for this device
-          setOriginalDurations(prev => {
-            const updated = { ...prev };
-            delete updated[endedDeviceId];
-            return updated;
-          });
         }
         
         // Clear interval if no active timers
@@ -129,6 +133,29 @@ export function useTimerInterval(
     
     setIntervalId(id);
   }, [intervalId, setTimers, logCompletedSession, originalDurations, loggedTimers]);
+
+  // Track extensions properly
+  useEffect(() => {
+    Object.entries(pendingExtensions).forEach(([deviceId, isPending]) => {
+      if (isPending && timers[deviceId]?.isActive) {
+        console.log(`Processing pending extension for ${timers[deviceId].label}`);
+        
+        // Clean up pending extension
+        setPendingExtensions(prev => {
+          const updated = { ...prev };
+          delete updated[deviceId];
+          return updated;
+        });
+        
+        // Clean up original duration for this device to ensure accurate tracking
+        setOriginalDurations(prev => {
+          const updated = { ...prev };
+          delete updated[deviceId];
+          return updated;
+        });
+      }
+    });
+  }, [timers, pendingExtensions]);
 
   // Clean up interval on unmount
   useEffect(() => {

@@ -112,6 +112,10 @@ export const extendTimer = (
   const additionalSeconds = additionalMinutes * 60;
   const currentRemaining = timers[deviceId].remainingSeconds;
   const newRemainingSeconds = currentRemaining + additionalSeconds;
+  const wasActive = timers[deviceId].isActive;
+  
+  // Log extension for debugging
+  console.log(`Extending timer for ${timers[deviceId].label} by ${additionalMinutes} minutes. Was active: ${wasActive}`);
   
   setTimers((prevTimers) => {
     const timer = prevTimers[deviceId];
@@ -124,7 +128,8 @@ export const extendTimer = (
       [deviceId]: {
         ...prevTimers[deviceId],
         remainingSeconds: newRemainingSeconds,
-        endTime: prevTimers[deviceId].isActive ? calculateEndTime(newRemainingSeconds) : null,
+        isActive: true, // Always activate timer when extending
+        endTime: calculateEndTime(newRemainingSeconds),
         originalDurationMinutes: originalDurationMinutes + additionalMinutes
       }
     };

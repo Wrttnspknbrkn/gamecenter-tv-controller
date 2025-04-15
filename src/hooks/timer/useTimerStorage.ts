@@ -13,6 +13,7 @@ const ANALYTICS_KEY = 'tv-analytics';
 export function useTimerStorage() {
   const [timers, setTimers] = useState<TimersState>({});
   const [analytics, setAnalytics] = useState<AnalyticsState>({ sessions: [] });
+  const [initialized, setInitialized] = useState(false);
 
   // Load timers and analytics from localStorage on initialization
   useEffect(() => {
@@ -51,6 +52,10 @@ export function useTimerStorage() {
         const parsedAnalytics = JSON.parse(savedAnalytics);
         setAnalytics(parsedAnalytics);
       }
+      
+      // Mark as initialized to prevent issues
+      setInitialized(true);
+      
     } catch (error) {
       console.error('Error loading saved data:', error);
       toast.error('Failed to load saved data');
@@ -59,13 +64,21 @@ export function useTimerStorage() {
 
   // Save timers to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
-  }, [timers]);
+    // Only save if we've loaded data first (prevents wiping data on initial load)
+    if (initialized) {
+      console.log('Saving timers to localStorage');
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+    }
+  }, [timers, initialized]);
 
   // Save analytics to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
-  }, [analytics]);
+    // Only save if we've loaded data first
+    if (initialized) {
+      console.log('Saving analytics to localStorage');
+      localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
+    }
+  }, [analytics, initialized]);
 
   // Function to log completed timer sessions
   const logCompletedSession = (deviceId: string, deviceLabel: string, durationMinutes: number) => {
@@ -75,7 +88,7 @@ export function useTimerStorage() {
     // Check for duplicate sessions (within a 10-second window)
     const isDuplicate = analytics.sessions.some(session => 
       session.deviceId === deviceId && 
-      Math.abs(session.endTime - endTime) < 10000 && // Within 10 seconds
+      Math.abs(session.endTime - endTime) < 15000 && // Within 15 seconds (increased from 10)
       Math.abs(session.durationMinutes - durationMinutes) < 1 // Same duration (allowing for rounding)
     );
     
