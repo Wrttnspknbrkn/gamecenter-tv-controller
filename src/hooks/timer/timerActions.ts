@@ -84,8 +84,9 @@ export const stopTimer = (
   const remainingMinutes = Math.ceil(timer.remainingSeconds / 60);
   const completedMinutes = totalDurationMinutes - remainingMinutes;
   
-  // Only log if the timer was actually used (more than 0 minutes)
-  if (logCompletedSession && completedMinutes > 0) {
+  // Only log if the timer was actually used (more than 0 minutes) and was active
+  // This prevents duplicate logging for timers that already ended naturally
+  if (logCompletedSession && completedMinutes > 0 && timer.isActive) {
     logCompletedSession(deviceId, timer.label, completedMinutes);
     console.log(`Timer stopped manually: ${timer.label}, completed: ${completedMinutes} of ${totalDurationMinutes} minutes`);
   }

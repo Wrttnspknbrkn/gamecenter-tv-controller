@@ -15,6 +15,8 @@ export function useTimerInterval(
   const [intervalId, setIntervalId] = useState<number | null>(null);
   // Store original durations to ensure accurate reporting
   const [originalDurations, setOriginalDurations] = useState<Record<string, number>>({});
+  // Track which timers have already been logged to prevent duplicates
+  const [loggedTimers, setLoggedTimers] = useState<Record<string, boolean>>({});
 
   // Track original durations when timers are added or modified
   useEffect(() => {
@@ -82,10 +84,16 @@ export function useTimerInterval(
         });
         
         // Handle timer end
-        if (timerEnded) {
-          // Log completed session
+        if (timerEnded && !loggedTimers[endedDeviceId]) {
+          // Log completed session only if not already logged
           if (logCompletedSession) {
             logCompletedSession(endedDeviceId, endedDeviceLabel, timerDuration);
+            
+            // Mark this timer as logged
+            setLoggedTimers(prev => ({
+              ...prev,
+              [endedDeviceId]: true
+            }));
           }
           
           // Switch to home screen when timer ends
@@ -117,7 +125,7 @@ export function useTimerInterval(
     }, 1000);
     
     setIntervalId(id);
-  }, [intervalId, setTimers, logCompletedSession, originalDurations]);
+  }, [intervalId, setTimers, logCompletedSession, originalDurations, loggedTimers]);
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -135,6 +143,20 @@ export function useTimerInterval(
       startTimerInterval();
     }
   }, [timers, intervalId, startTimerInterval]);
+
+  // Reset logged timers when timers are removed
+  useEffect(() => {
+    setLoggedTimers(prev => {
+      const updated = { ...prev };
+      // Remove logged status for timers that no longer exist
+      Object.keys(updated).forEach(deviceId => {
+        if (!timers[deviceId]) {
+          delete updated[deviceId];
+        }
+      });
+      return updated;
+    });
+  }, [timers]);
 
   return { startTimerInterval };
 }

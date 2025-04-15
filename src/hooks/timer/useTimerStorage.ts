@@ -69,12 +69,29 @@ export function useTimerStorage() {
 
   // Function to log completed timer sessions
   const logCompletedSession = (deviceId: string, deviceLabel: string, durationMinutes: number) => {
+    const startTime = Date.now() - (durationMinutes * 60 * 1000);
+    const endTime = Date.now();
+    
+    // Check for duplicate sessions (within a 10-second window)
+    const isDuplicate = analytics.sessions.some(session => 
+      session.deviceId === deviceId && 
+      Math.abs(session.endTime - endTime) < 10000 && // Within 10 seconds
+      Math.abs(session.durationMinutes - durationMinutes) < 1 // Same duration (allowing for rounding)
+    );
+    
+    if (isDuplicate) {
+      console.log(`Prevented duplicate session for ${deviceLabel}, duration: ${durationMinutes} minutes`);
+      return;
+    }
+    
+    console.log(`Logging new session for ${deviceLabel}, duration: ${durationMinutes} minutes, start: ${new Date(startTime).toLocaleTimeString()}, end: ${new Date(endTime).toLocaleTimeString()}`);
+    
     const session: TimerSession = {
       id: `${deviceId}-${Date.now()}`,
       deviceId,
       deviceLabel,
-      startTime: Date.now() - (durationMinutes * 60 * 1000),
-      endTime: Date.now(),
+      startTime,
+      endTime,
       durationMinutes
     };
 
