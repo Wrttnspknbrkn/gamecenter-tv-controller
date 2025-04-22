@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 interface DateRangePickerProps {
   dateRange: { start: Date; end: Date };
@@ -17,10 +18,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   onDateRangeChange 
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
-  const [selectedRange, setSelectedRange] = React.useState<{
-    from: Date;
-    to: Date | undefined;
-  }>({
+  const [selectedRange, setSelectedRange] = React.useState<DateRange>({
     from: dateRange.start,
     to: dateRange.end,
   });
@@ -62,8 +60,12 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     },
   ];
 
-  const handleRangeSelect = (range: { from: Date; to: Date | undefined }) => {
+  const handleRangeSelect = (range: DateRange | undefined) => {
+    if (!range) return;
+    
     setSelectedRange(range);
+    
+    // Only update the parent component if both from and to are selected
     if (range.from && range.to) {
       onDateRangeChange({ start: range.from, end: range.to });
       setIsCalendarOpen(false);
@@ -119,9 +121,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           <Calendar
             mode="range"
             selected={selectedRange}
-            onSelect={(range) => handleRangeSelect(range || { from: new Date(), to: new Date() })}
+            onSelect={handleRangeSelect}
             initialFocus
             numberOfMonths={2}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
