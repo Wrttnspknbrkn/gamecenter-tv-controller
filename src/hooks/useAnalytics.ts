@@ -28,11 +28,12 @@ export const useAnalytics = (dateRange: { start: Date; end: Date }) => {
           : [];
 
         // Filter sessions based on date range
-        const startTimestamp = dateRange.start.setHours(0, 0, 0, 0);
-        const endTimestamp = dateRange.end.setHours(23, 59, 59, 999);
+        const startTimestamp = new Date(dateRange.start).setHours(0, 0, 0, 0);
+        const endTimestamp = new Date(dateRange.end).setHours(23, 59, 59, 999);
         
         const filteredSessions = parsedSessions.filter(session => {
-          const sessionTimestamp = new Date(session.date).getTime();
+          const sessionDate = new Date(session.date);
+          const sessionTimestamp = sessionDate.getTime();
           return sessionTimestamp >= startTimestamp && sessionTimestamp <= endTimestamp;
         });
 
@@ -51,8 +52,10 @@ export const useAnalytics = (dateRange: { start: Date; end: Date }) => {
               totalMinutes: 0
             };
           }
-          // Add session duration in minutes
-          deviceDailyUsage[key].totalMinutes += session.duration / 60;
+          
+          // Add session duration in minutes, ensuring at least 1 minute
+          const durationMinutes = Math.max(1, Math.ceil(session.duration / 60));
+          deviceDailyUsage[key].totalMinutes += durationMinutes;
         });
         
         setDailyUsage(Object.values(deviceDailyUsage));
@@ -75,7 +78,13 @@ export const useAnalytics = (dateRange: { start: Date; end: Date }) => {
         
         // Calculate summary metrics
         const uniqueDevices = new Set(filteredSessions.map(s => s.deviceId));
-        const totalMinutes = filteredSessions.reduce((acc, session) => acc + (session.duration / 60), 0);
+        
+        // Calculate total minutes using ceil of seconds/60, ensuring at least 1 minute per session
+        const totalMinutes = filteredSessions.reduce((acc, session) => {
+          const durationMinutes = Math.max(1, Math.ceil(session.duration / 60));
+          return acc + durationMinutes;
+        }, 0);
+        
         const avgSessionLength = filteredSessions.length > 0 
           ? totalMinutes / filteredSessions.length 
           : 0;

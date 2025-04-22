@@ -23,7 +23,10 @@ export const SessionHistoryTable: React.FC<SessionHistoryTableProps> = ({ sessio
   
   // Helper function to format duration
   const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
+    if (!seconds) return "0 mins";
+    
+    // Convert seconds to minutes, ensuring at least 1 minute is shown
+    const minutes = Math.max(1, Math.ceil(seconds / 60));
     return `${minutes} min${minutes !== 1 ? 's' : ''}`;
   };
 

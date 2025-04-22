@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { HomeIcon, BarChart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalyticsRecorder } from '@/hooks/useAnalyticsRecorder';
+import { useTimerCompletionAdapter } from '@/hooks/useTimerCompletionAdapter';
+import { useTimerEventSimulator } from '@/hooks/useTimerEventSimulator';
 import { AnalyticsSummaryCards } from '@/components/analytics/AnalyticsSummaryCards';
 import { SessionHistoryTable } from '@/components/analytics/SessionHistoryTable';
 import { DailyUsageChart, HourlyUsageChart } from '@/components/analytics/UsageChart';
@@ -20,6 +23,15 @@ export default function Analytics() {
     start.setDate(start.getDate() - 6); // Last 7 days including today
     return { start, end };
   });
+  
+  // Use the analytics recorder hook to listen for timer completions
+  useAnalyticsRecorder();
+  
+  // Use the timer completion adapter to detect timer completions
+  useTimerCompletionAdapter();
+  
+  // For development testing only - will be removed in production
+  useTimerEventSimulator();
   
   const { sessions, dailyUsage, hourlyUsage, summary, isLoading } = useAnalytics(dateRange);
 
