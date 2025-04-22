@@ -1,137 +1,140 @@
 
+import { TimersState, TimerState } from './timerTypes';
 import { calculateEndTime } from './timerUtils';
-import type { TimersState } from './timerTypes';
+import { toast } from 'sonner';
+import { controlDevice } from '@/services/smartThingsService';
 
 /**
- * Start a new timer for a device
+ * Functions for manipulating timers
  */
+
 export const startTimer = (
-  deviceId: string, 
-  label: string, 
-  durationMinutes: number, 
+  deviceId: string,
+  label: string,
+  durationMinutes: number,
   setTimers: React.Dispatch<React.SetStateAction<TimersState>>
 ) => {
   const durationSeconds = durationMinutes * 60;
+  const endTime = calculateEndTime(durationSeconds);
   
-  setTimers((prevTimers) => ({
+  setTimers(prevTimers => ({
     ...prevTimers,
     [deviceId]: {
       deviceId,
       label,
       remainingSeconds: durationSeconds,
       isActive: true,
-      endTime: calculateEndTime(durationSeconds),
-      originalDurationMinutes: durationMinutes // Store the original duration explicitly
+      endTime
     }
   }));
+  
+  toast.success(`Timer set for ${label}: ${durationMinutes} minutes`);
 };
 
-/**
- * Pause an active timer
- */
 export const pauseTimer = (
-  deviceId: string, 
-  timers: TimersState, 
+  deviceId: string,
+  timers: TimersState,
   setTimers: React.Dispatch<React.SetStateAction<TimersState>>
 ) => {
-  if (!timers[deviceId] || !timers[deviceId].isActive) return;
-  
-  setTimers((prevTimers) => ({
-    ...prevTimers,
-    [deviceId]: {
-      ...prevTimers[deviceId],
-      isActive: false,
-      endTime: null
-    }
-  }));
-};
-
-/**
- * Resume a paused timer
- */
-export const resumeTimer = (
-  deviceId: string, 
-  timers: TimersState, 
-  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
-) => {
-  if (!timers[deviceId] || timers[deviceId].isActive) return;
-  
-  const durationSeconds = timers[deviceId].remainingSeconds;
-  
-  setTimers((prevTimers) => ({
-    ...prevTimers,
-    [deviceId]: {
-      ...prevTimers[deviceId],
-      isActive: true,
-      endTime: calculateEndTime(durationSeconds)
-    }
-  }));
-};
-
-/**
- * Stop a timer completely and log completed session if logCompletedSession is provided
- */
-export const stopTimer = (
-  deviceId: string, 
-  timers: TimersState, 
-  setTimers: React.Dispatch<React.SetStateAction<TimersState>>,
-  logCompletedSession?: (deviceId: string, deviceLabel: string, durationMinutes: number) => void
-) => {
-  if (!timers[deviceId]) return;
-  
-  const timer = timers[deviceId];
-  const totalDurationMinutes = timer.originalDurationMinutes || 0;
-  const remainingMinutes = Math.ceil(timer.remainingSeconds / 60);
-  const completedMinutes = totalDurationMinutes - remainingMinutes;
-  
-  // Only log if the timer was actually used (more than 0 minutes) and was active
-  // This prevents duplicate logging for timers that already ended naturally
-  if (logCompletedSession && completedMinutes > 0 && timer.isActive) {
-    logCompletedSession(deviceId, timer.label, completedMinutes);
-    console.log(`Timer stopped manually: ${timer.label}, completed: ${completedMinutes} of ${totalDurationMinutes} minutes`);
-  }
-  
-  setTimers((prevTimers) => {
-    const updatedTimers = { ...prevTimers };
-    delete updatedTimers[deviceId];
-    return updatedTimers;
-  });
-};
-
-/**
- * Extend an existing timer by adding minutes
- */
-export const extendTimer = (
-  deviceId: string, 
-  additionalMinutes: number, 
-  timers: TimersState, 
-  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
-) => {
-  if (!timers[deviceId]) return;
-  
-  const additionalSeconds = additionalMinutes * 60;
-  const currentRemaining = timers[deviceId].remainingSeconds;
-  const newRemainingSeconds = currentRemaining + additionalSeconds;
-  const wasActive = timers[deviceId].isActive;
-  
-  // Log extension for debugging
-  console.log(`Extending timer for ${timers[deviceId].label} by ${additionalMinutes} minutes. Was active: ${wasActive}`);
-  
-  setTimers((prevTimers) => {
-    const timer = prevTimers[deviceId];
-    // Update the original duration when extending the timer
-    const originalDurationMinutes = timer.originalDurationMinutes || 
-      Math.ceil(timer.remainingSeconds / 60);
+  setTimers(prevTimers => {
+    if (!prevTimers[deviceId]) return prevTimers;
     
     return {
       ...prevTimers,
       [deviceId]: {
         ...prevTimers[deviceId],
-        remainingSeconds: newRemainingSeconds,
-        isActive: true, // Always activate timer when extending
-        endTime: calculateEndTime(newRemainingSeconds),
-        originalDurationMinutes: originalDurationMinutes + additionalMinutes
+        isActive: false,
+        endTime: null
       }
     };
   });
+  
+  toast.info(`Timer paused for ${timers[deviceId]?.label}`);
+};
+
+export const resumeTimer = (
+  deviceId: string,
+  timers: TimersState,
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
+) => {
+  setTimers(prevTimers => {
+    if (!prevTimers[deviceId]) return prevTimers;
+    
+    const endTime = calculateEndTime(prevTimers[deviceId].remainingSeconds);
+    
+    return {
+      ...prevTimers,
+      [deviceId]: {
+        ...prevTimers[deviceId],
+        isActive: true,
+        endTime
+      }
+    };
+  });
+  
+  toast.info(`Timer resumed for ${timers[deviceId]?.label}`);
+};
+
+export const stopTimer = (
+  deviceId: string,
+  timers: TimersState,
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
+) => {
+  // When the timer is stopped, switch to home or digital TV
+  controlDevice(deviceId, 'home')
+    .then(() => {
+      toast.info(`Switched ${timers[deviceId]?.label} to home screen`);
+    })
+    .catch(error => {
+      console.error('Failed to switch TV to home screen:', error);
+      toast.error(`Failed to switch ${timers[deviceId]?.label} to home screen`);
+    });
+
+  setTimers(prevTimers => {
+    const updatedTimers = { ...prevTimers };
+    delete updatedTimers[deviceId];
+    return updatedTimers;
+  });
+  
+  toast.info(`Timer stopped for ${timers[deviceId]?.label}`);
+};
+
+export const extendTimer = (
+  deviceId: string,
+  additionalMinutes: number,
+  timers: TimersState,
+  setTimers: React.Dispatch<React.SetStateAction<TimersState>>
+) => {
+  // First switch to game mode
+  controlDevice(deviceId, 'gameMode')
+    .then(() => {
+      // After switching to game mode, update the timer
+      setTimers(prevTimers => {
+        if (!prevTimers[deviceId]) return prevTimers;
+        
+        const timer = prevTimers[deviceId];
+        const additionalSeconds = additionalMinutes * 60;
+        const newRemainingSeconds = timer.remainingSeconds + additionalSeconds;
+        
+        // Automatically make timer active when extended
+        const isActive = true;
+        let newEndTime = calculateEndTime(newRemainingSeconds);
+        
+        return {
+          ...prevTimers,
+          [deviceId]: {
+            ...timer,
+            remainingSeconds: newRemainingSeconds,
+            endTime: newEndTime,
+            isActive // Always set to active when extending
+          }
+        };
+      });
+      
+      toast.success(`Timer extended for ${timers[deviceId]?.label}: +${additionalMinutes} minutes and switched to game mode`);
+    })
+    .catch(error => {
+      console.error('Failed to switch TV to game mode:', error);
+      toast.error(`Failed to switch ${timers[deviceId]?.label} to game mode`);
+    });
 };

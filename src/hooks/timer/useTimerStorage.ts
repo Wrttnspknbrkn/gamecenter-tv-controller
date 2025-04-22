@@ -1,24 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { TimerState, TimersState, AnalyticsState, TimerSession } from './timerTypes';
+import { TimerState, TimersState } from './timerTypes';
 import { calculateRemainingSeconds } from './timerUtils';
 
 const STORAGE_KEY = 'tv-timers';
-const ANALYTICS_KEY = 'tv-analytics';
 
 /**
  * Hook to handle loading and saving timers to localStorage
  */
 export function useTimerStorage() {
   const [timers, setTimers] = useState<TimersState>({});
-  const [analytics, setAnalytics] = useState<AnalyticsState>({ sessions: [] });
-  const [initialized, setInitialized] = useState(false);
 
-  // Load timers and analytics from localStorage on initialization
+  // Load timers from localStorage on initialization
   useEffect(() => {
     try {
-      // Load timers
       const savedTimers = localStorage.getItem(STORAGE_KEY);
       if (savedTimers) {
         const parsedTimers = JSON.parse(savedTimers);
@@ -45,73 +41,16 @@ export function useTimerStorage() {
         
         setTimers(validTimers);
       }
-
-      // Load analytics
-      const savedAnalytics = localStorage.getItem(ANALYTICS_KEY);
-      if (savedAnalytics) {
-        const parsedAnalytics = JSON.parse(savedAnalytics);
-        setAnalytics(parsedAnalytics);
-      }
-      
-      // Mark as initialized to prevent issues
-      setInitialized(true);
-      
     } catch (error) {
-      console.error('Error loading saved data:', error);
-      toast.error('Failed to load saved data');
+      console.error('Error loading saved timers:', error);
+      toast.error('Failed to load saved timers');
     }
   }, []);
 
   // Save timers to localStorage whenever they change
   useEffect(() => {
-    // Only save if we've loaded data first (prevents wiping data on initial load)
-    if (initialized) {
-      console.log('Saving timers to localStorage');
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
-    }
-  }, [timers, initialized]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+  }, [timers]);
 
-  // Save analytics to localStorage whenever they change
-  useEffect(() => {
-    // Only save if we've loaded data first
-    if (initialized) {
-      console.log('Saving analytics to localStorage');
-      localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
-    }
-  }, [analytics, initialized]);
-
-  // Function to log completed timer sessions
-  const logCompletedSession = (deviceId: string, deviceLabel: string, durationMinutes: number) => {
-    const startTime = Date.now() - (durationMinutes * 60 * 1000);
-    const endTime = Date.now();
-    
-    // Check for duplicate sessions (within a 10-second window)
-    const isDuplicate = analytics.sessions.some(session => 
-      session.deviceId === deviceId && 
-      Math.abs(session.endTime - endTime) < 15000 && // Within 15 seconds (increased from 10)
-      Math.abs(session.durationMinutes - durationMinutes) < 1 // Same duration (allowing for rounding)
-    );
-    
-    if (isDuplicate) {
-      console.log(`Prevented duplicate session for ${deviceLabel}, duration: ${durationMinutes} minutes`);
-      return;
-    }
-    
-    console.log(`Logging new session for ${deviceLabel}, duration: ${durationMinutes} minutes, start: ${new Date(startTime).toLocaleTimeString()}, end: ${new Date(endTime).toLocaleTimeString()}`);
-    
-    const session: TimerSession = {
-      id: `${deviceId}-${Date.now()}`,
-      deviceId,
-      deviceLabel,
-      startTime,
-      endTime,
-      durationMinutes
-    };
-
-    setAnalytics(prev => ({
-      sessions: [...prev.sessions, session]
-    }));
-  };
-
-  return { timers, setTimers, analytics, logCompletedSession };
+  return { timers, setTimers };
 }
