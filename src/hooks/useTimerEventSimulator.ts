@@ -15,22 +15,23 @@ export const useTimerEventSimulator = () => {
       
       // Pick random values
       const randomIndex = Math.floor(Math.random() * deviceIds.length);
+      const randomDuration = durations[randomIndex];
       
       const timerCompletedEvent = new CustomEvent('timerCompleted', {
         detail: {
           deviceId: deviceIds[randomIndex],
           deviceName: deviceNames[randomIndex],
-          duration: durations[randomIndex]
+          duration: randomDuration
         }
       });
       
       window.dispatchEvent(timerCompletedEvent);
-      console.log('DEBUG: Simulated timer completion event');
+      console.log(`DEBUG: Simulated timer completion for ${deviceNames[randomIndex]} with ${randomDuration} seconds duration`);
     };
 
     // Add a debug button to the UI for testing
     const addDebugButton = () => {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         const existingButton = document.getElementById('simulate-timer-button');
         if (!existingButton) {
           const button = document.createElement('button');

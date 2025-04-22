@@ -21,22 +21,32 @@ export const useAnalytics = (dateRange: { start: Date; end: Date }) => {
     const loadAnalyticsData = () => {
       setIsLoading(true);
       try {
+        console.log('Loading analytics data with date range:', {
+          start: dateRange.start.toISOString().split('T')[0],
+          end: dateRange.end.toISOString().split('T')[0]
+        });
+        
         // Read sessions from localStorage
         const storedSessions = localStorage.getItem(SESSIONS_STORAGE_KEY);
-        const parsedSessions: TimerSession[] = storedSessions 
-          ? JSON.parse(storedSessions) 
-          : [];
+        if (!storedSessions) {
+          console.log('No sessions data found in localStorage');
+          setIsLoading(false);
+          return;
+        }
+        
+        const parsedSessions: TimerSession[] = JSON.parse(storedSessions);
+        console.log(`Found ${parsedSessions.length} total sessions in storage`);
 
         // Filter sessions based on date range
         const startTimestamp = new Date(dateRange.start).setHours(0, 0, 0, 0);
         const endTimestamp = new Date(dateRange.end).setHours(23, 59, 59, 999);
         
         const filteredSessions = parsedSessions.filter(session => {
-          const sessionDate = new Date(session.date);
-          const sessionTimestamp = sessionDate.getTime();
-          return sessionTimestamp >= startTimestamp && sessionTimestamp <= endTimestamp;
+          const sessionDate = new Date(session.date).getTime();
+          return sessionDate >= startTimestamp && sessionDate <= endTimestamp;
         });
-
+        
+        console.log(`Filtered to ${filteredSessions.length} sessions in the selected date range`);
         setSessions(filteredSessions);
         
         // Process daily usage
@@ -94,6 +104,13 @@ export const useAnalytics = (dateRange: { start: Date; end: Date }) => {
           totalDevices: uniqueDevices.size,
           totalMinutesUsed: totalMinutes,
           averageSessionLength: avgSessionLength
+        });
+        
+        console.log('Analytics summary:', {
+          totalSessions: filteredSessions.length,
+          devices: uniqueDevices.size,
+          totalMinutes,
+          avgLength: avgSessionLength
         });
       } catch (error) {
         console.error("Error loading analytics data:", error);

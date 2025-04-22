@@ -16,16 +16,23 @@ export const useAnalyticsRecorder = () => {
       try {
         const { deviceId, deviceName, duration } = event.detail;
         
-        if (!deviceId || !deviceName || !duration) {
-          console.error('Analytics recorder: Missing required timer data');
+        if (!deviceId || !deviceName || duration === undefined) {
+          console.error('Analytics recorder: Missing required timer data', event.detail);
           return;
         }
+
+        console.log('Analytics recorder received event with duration (seconds):', duration);
 
         // Create timestamp data
         const now = new Date();
         const endTime = now.getTime();
-        const startTime = endTime - (duration * 1000); // Convert seconds to milliseconds
-        const formattedDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        // Calculate start time from the duration (seconds)
+        // For explicitly completed timers, we use the actual duration that elapsed
+        const startTime = endTime - (duration * 1000);
+        
+        // Format date for storage and filtering (YYYY-MM-DD)
+        const formattedDate = now.toISOString().split('T')[0];
         
         // Create session record
         const session: TimerSession = {
@@ -36,6 +43,14 @@ export const useAnalyticsRecorder = () => {
           duration, // Duration in seconds (from the timer)
           date: formattedDate
         };
+
+        console.log('Recording analytics session:', {
+          device: deviceName,
+          start: new Date(startTime).toLocaleTimeString(),
+          end: new Date(endTime).toLocaleTimeString(),
+          durationSecs: duration,
+          durationMins: Math.ceil(duration / 60)
+        });
 
         // Get existing sessions from storage
         const storedSessions = localStorage.getItem(SESSIONS_STORAGE_KEY);
