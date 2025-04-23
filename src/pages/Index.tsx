@@ -1,15 +1,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TvDevice, getDevices } from '@/services/smartThingsService';
-import { TVCard } from '@/components/TVCard';
 import { useTimerControl } from '@/hooks/useTimerControl';
 import { toast } from 'sonner';
-import { RefreshCcw, MonitorSmartphone } from 'lucide-react';
+import { RefreshCcw, MonitorSmartphone, BarChart } from 'lucide-react';
 import { TokenSettings } from '@/components/TokenSettings';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TVCardWithAnalytics } from '@/components/TVCardWithAnalytics';
+import { useTimerEventListener } from '@/hooks/analytics/useTimerEventListener';
 
 export default function Index() {
   const [tvDevices, setTvDevices] = useState<TvDevice[]>([]);
@@ -17,15 +19,10 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   
-  const { 
-    timers, 
-    startTimer, 
-    pauseTimer, 
-    resumeTimer, 
-    stopTimer, 
-    extendTimer,
-    formatTime 
-  } = useTimerControl();
+  const { timers } = useTimerControl();
+  
+  // Initialize timer event listener
+  useTimerEventListener(tvDevices);
 
   const fetchDevices = useCallback(async () => {
     try {
@@ -95,7 +92,15 @@ export default function Index() {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/analytics" className="flex items-center gap-2">
+                  <BarChart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Analytics</span>
+                </Link>
+              </Button>
+              
               <TokenSettings />
+              
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -162,16 +167,11 @@ export default function Index() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredDevices.map((tv) => (
-                  <TVCard
+                  <TVCardWithAnalytics
                     key={tv.id}
                     tv={tv}
                     timer={timers[tv.id]}
-                    onStartTimer={(duration) => startTimer(tv.id, tv.label, duration)}
-                    onPauseTimer={() => pauseTimer(tv.id)}
-                    onResumeTimer={() => resumeTimer(tv.id)}
-                    onStopTimer={() => stopTimer(tv.id)}
-                    onExtendTimer={(duration) => extendTimer(tv.id, duration)}
-                    formatTime={formatTime}
+                    devices={tvDevices}
                   />
                 ))}
               </div>
