@@ -1,49 +1,103 @@
 
-import * as React from "react";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarDays } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 interface DateRangePickerProps {
-  dateRange: DateRange | undefined;
-  onDateRangeChange: (range: DateRange | undefined) => void;
-  className?: string;
+  dateRange: { start: Date; end: Date };
+  onDateRangeChange: (range: { start: Date; end: Date }) => void;
 }
 
-export function DateRangePicker({
-  dateRange,
-  onDateRangeChange,
-  className,
-}: DateRangePickerProps) {
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({ 
+  dateRange, 
+  onDateRangeChange 
+}) => {
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
+  const [selectedRange, setSelectedRange] = React.useState<DateRange>({
+    from: dateRange.start,
+    to: dateRange.end,
+  });
+
+  // Predefined date ranges
+  const dateRanges = [
+    { 
+      label: 'Today', 
+      getDates: () => {
+        const today = new Date();
+        return { start: today, end: today };
+      }
+    },
+    { 
+      label: 'Yesterday', 
+      getDates: () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return { start: yesterday, end: yesterday };
+      }
+    },
+    { 
+      label: 'Last 7 Days', 
+      getDates: () => {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 6);
+        return { start, end };
+      }
+    },
+    { 
+      label: 'Last 30 Days', 
+      getDates: () => {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 29);
+        return { start, end };
+      }
+    },
+  ];
+
+  const handleRangeSelect = (range: DateRange | undefined) => {
+    if (!range) return;
+    
+    setSelectedRange(range);
+    
+    // Only update the parent component if both from and to are selected
+    if (range.from && range.to) {
+      onDateRangeChange({ start: range.from, end: range.to });
+      setIsCalendarOpen(false);
+    }
+  };
+
+  const handlePredefinedRangeSelect = (getDates: () => { start: Date; end: Date }) => {
+    const { start, end } = getDates();
+    setSelectedRange({ from: start, to: end });
+    onDateRangeChange({ start, end });
+    setIsCalendarOpen(false);
+  };
+
   return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover>
+    <div className="flex items-center space-x-2">
+      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
         <PopoverTrigger asChild>
           <Button
-            id="date"
-            variant={"outline"}
+            variant="outline"
             className={cn(
-              "w-full justify-start text-left font-normal",
-              !dateRange && "text-muted-foreground"
+              "justify-start text-left font-normal w-full max-w-[280px]",
+              !dateRange.start && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
-                </>
+            <CalendarDays className="mr-2 h-4 w-4" />
+            {dateRange.start ? (
+              dateRange.start.toDateString() === dateRange.end.toDateString() ? (
+                format(dateRange.start, "PPP")
               ) : (
-                format(dateRange.from, "LLL dd, y")
+                <>
+                  {format(dateRange.start, "PPP")} - {format(dateRange.end, "PPP")}
+                </>
               )
             ) : (
               <span>Pick a date range</span>
@@ -51,16 +105,29 @@ export function DateRangePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
+          <div className="grid grid-cols-2 gap-2 p-2">
+            {dateRanges.map((range) => (
+              <Button
+                key={range.label}
+                size="sm"
+                variant="outline"
+                className="h-8"
+                onClick={() => handlePredefinedRangeSelect(range.getDates)}
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
           <Calendar
-            initialFocus
             mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
-            onSelect={onDateRangeChange}
+            selected={selectedRange}
+            onSelect={handleRangeSelect}
+            initialFocus
             numberOfMonths={2}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
     </div>
   );
-}
+};

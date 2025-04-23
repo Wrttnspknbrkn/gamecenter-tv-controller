@@ -1,64 +1,40 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { DateRange } from 'react-day-picker';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Home, Trash2 } from 'lucide-react';
-import { SessionHistoryTable } from '@/components/analytics/SessionHistoryTable';
-import { DateRangePicker } from '@/components/analytics/DateRangePicker';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { HomeIcon, BarChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalyticsRecorder } from '@/hooks/useAnalyticsRecorder';
+import { useTimerCompletionAdapter } from '@/hooks/useTimerCompletionAdapter';
+import { useTimerEventSimulator } from '@/hooks/useTimerEventSimulator';
 import { AnalyticsSummaryCards } from '@/components/analytics/AnalyticsSummaryCards';
-import { TimerCompletionDebugger } from '@/components/analytics/TimerCompletionDebugger';
-import { useAnalyticsStorage } from '@/hooks/analytics/useAnalyticsStorage';
-import { useTimerAnalytics } from '@/hooks/analytics/useTimerAnalytics';
-import { getDevices } from '@/services/smartThingsService';
-import { toast } from 'sonner';
+import { SessionHistoryTable } from '@/components/analytics/SessionHistoryTable';
+import { DailyUsageChart, HourlyUsageChart } from '@/components/analytics/UsageChart';
+import { DateRangePicker } from '@/components/analytics/DateRangePicker';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Analytics() {
-  const [tvDevices, setTvDevices] = useState([]);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    to: new Date(),
+  // Initialize date range to last 7 days
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 6); // Last 7 days including today
+    return { start, end };
   });
-  const [isLoading, setIsLoading] = useState(true);
   
-  const { getSessions, clearAnalyticsData } = useAnalyticsStorage();
-  const { calculateMetrics } = useTimerAnalytics(tvDevices);
+  // Use the analytics recorder hook to listen for timer completions
+  useAnalyticsRecorder();
   
-  // Load devices data
-  useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        const devices = await getDevices();
-        setTvDevices(devices);
-      } catch (error) {
-        console.error('Error fetching devices for analytics:', error);
-        toast.error('Failed to load TV devices for analytics');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchDevices();
-  }, []);
+  // Use the timer completion adapter to detect timer completions
+  useTimerCompletionAdapter();
   
-  // Get filtered sessions based on date range
-  const filteredSessions = getSessions(dateRange);
+  // For development testing only - will be removed in production
+  useTimerEventSimulator();
   
-  // Calculate metrics based on filtered sessions
-  const metrics = calculateMetrics(dateRange);
-  
-  // Handle date range changes
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-  };
-  
-  // Handle clearing analytics data
-  const handleClearData = () => {
-    clearAnalyticsData();
-  };
-  
+  const { sessions, dailyUsage, hourlyUsage, summary, isLoading } = useAnalytics(dateRange);
+
   return (
     <div className="min-h-screen animate-fade-in">
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -68,74 +44,102 @@ export default function Analytics() {
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1">
                 <span className="flex items-center gap-2">
                   <BarChart className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                  TV Timer Analytics
+                  TV Usage Analytics
                 </span>
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Analyze TV timer usage patterns and history
+                Insights and statistics for your TV usage patterns
               </p>
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
-              <Button variant="outline" size="sm" asChild>
+              <Button asChild variant="outline" size="sm">
                 <Link to="/" className="flex items-center gap-2">
-                  <Home className="h-4 w-4" />
-                  <span>Back to Dashboard</span>
+                  <HomeIcon className="h-4 w-4" />
+                  <span>Back to Timers</span>
                 </Link>
-              </Button>
-              
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleClearData}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Clear Data</span>
               </Button>
             </div>
           </div>
         </header>
-        
+
         <div className="mb-6">
-          <DateRangePicker 
-            dateRange={dateRange}
-            onDateRangeChange={handleDateRangeChange}
-            className="max-w-xs"
-          />
+          <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
-        
-        <div className="mb-8">
-          <AnalyticsSummaryCards 
-            metrics={metrics}
-            isLoading={isLoading}
-          />
-        </div>
-        
-        <Tabs 
-          defaultValue="overview" 
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="mb-6"
-        >
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="mb-4">
-              <TabsTrigger value="overview">Session History</TabsTrigger>
-              <TabsTrigger value="debug">Debug Tools</TabsTrigger>
-            </TabsList>
+
+        {isLoading ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <Card key={i}>
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-4 w-24" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-8 w-16 mb-1" />
+                    <Skeleton className="h-3 w-32" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Skeleton className="h-80 w-full" />
+            <Skeleton className="h-60 w-full" />
           </div>
-          
-          <TabsContent value="overview" className="mt-0">
-            <SessionHistoryTable 
-              sessions={filteredSessions}
-              isLoading={isLoading}
-            />
-          </TabsContent>
-          
-          <TabsContent value="debug" className="mt-0">
-            <TimerCompletionDebugger />
-          </TabsContent>
-        </Tabs>
+        ) : (
+          <div className="space-y-6">
+            <AnalyticsSummaryCards summary={summary} />
+
+            <Tabs defaultValue="daily" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="daily">Daily Usage</TabsTrigger>
+                <TabsTrigger value="hourly">Usage by Hour</TabsTrigger>
+                <TabsTrigger value="sessions">Session History</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="daily">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Daily TV Usage</CardTitle>
+                    <CardDescription>
+                      Minutes used per TV device by date
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DailyUsageChart dailyUsage={dailyUsage} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="hourly">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Usage by Hour of Day</CardTitle>
+                    <CardDescription>
+                      When TVs are most commonly used
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <HourlyUsageChart hourlyUsage={hourlyUsage} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="sessions">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Session History</CardTitle>
+                    <CardDescription>
+                      Detailed log of all timer sessions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <SessionHistoryTable sessions={sessions} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </div>
     </div>
   );
