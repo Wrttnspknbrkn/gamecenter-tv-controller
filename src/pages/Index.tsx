@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,10 +7,9 @@ import { TvDevice, getDevices } from '@/services/smartThingsService';
 import { TVCard } from '@/components/TVCard';
 import { useTimerControl } from '@/hooks/useTimerControl';
 import { toast } from 'sonner';
-import { RefreshCcw, MonitorSmartphone, BarChart } from 'lucide-react';
+import { RefreshCcw, MonitorSmartphone } from 'lucide-react';
 import { TokenSettings } from '@/components/TokenSettings';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Link } from 'react-router-dom';
 
 export default function Index() {
   const [tvDevices, setTvDevices] = useState<TvDevice[]>([]);
@@ -95,12 +95,6 @@ export default function Index() {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/analytics" className="flex items-center gap-2">
-                  <BarChart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Analytics</span>
-                </Link>
-              </Button>
               <TokenSettings />
               <TooltipProvider>
                 <Tooltip>
