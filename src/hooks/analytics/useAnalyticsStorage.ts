@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { DateRange } from 'react-day-picker';
 
 // Analytics data type definitions
 export interface TimerAnalyticsSession {
@@ -102,9 +103,9 @@ export function useAnalyticsStorage() {
     });
   };
 
-  // Get all sessions
-  const getSessions = (dateRange?: { start: Date; end: Date }) => {
-    if (!dateRange) {
+  // Get all sessions - accepts DateRange from react-day-picker
+  const getSessions = (dateRange?: DateRange) => {
+    if (!dateRange || !dateRange.from) {
       return analyticsData.sessions;
     }
     
@@ -112,10 +113,11 @@ export function useAnalyticsStorage() {
     return analyticsData.sessions.filter(session => {
       const sessionStartTime = new Date(session.startTime);
       // Set time to midnight for date-only comparison
-      const startDate = new Date(dateRange.start);
+      const startDate = new Date(dateRange.from);
       startDate.setHours(0, 0, 0, 0);
       
-      const endDate = new Date(dateRange.end);
+      // If no end date specified, use the from date as both start and end
+      const endDate = dateRange.to ? new Date(dateRange.to) : new Date(dateRange.from);
       endDate.setHours(23, 59, 59, 999);
       
       return sessionStartTime >= startDate && sessionStartTime <= endDate;

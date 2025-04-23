@@ -1,5 +1,7 @@
+
 import { useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { DateRange } from 'react-day-picker';
 import { useAnalyticsStorage, TimerAnalyticsSession } from './useAnalyticsStorage';
 import { TvDevice } from '@/services/smartThingsService';
 import { TimerState } from '@/hooks/useTimerControl';
@@ -100,7 +102,7 @@ export function useTimerAnalytics(tvDevices: TvDevice[]) {
   }, [getActiveSessions, updateSession]);
 
   // Calculate metrics for analytics dashboard
-  const calculateMetrics = useCallback((dateRange?: { start: Date; end: Date }) => {
+  const calculateMetrics = useCallback((dateRange?: DateRange) => {
     const sessions = getSessions(dateRange);
     const completedSessions = sessions.filter(s => s.completionType !== 'active');
     
